@@ -1639,6 +1639,128 @@
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
         }
 
+        /* ============================================================
+           ===============  v4 COMPONENTS  ============================
+           ============================================================ */
+
+        /* ===== JALALI DATE PICKER ===== */
+        .date-btn {
+            text-align: right;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .date-btn::after {
+            content: "";
+            width: 16px; height: 16px;
+            border: 2px solid var(--text-muted);
+            border-radius: 4px;
+            box-shadow: inset 0 3px 0 -1px var(--text-muted);
+            flex-shrink: 0;
+        }
+        .dp-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .dp-title { font-weight: 800; font-size: 15px; }
+        .dp-nav {
+            width: 38px; height: 38px;
+            border: none; border-radius: 12px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 20px; font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .dp-nav:active { transform: scale(0.9); }
+        .dp-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .dp-week { margin-bottom: 6px; }
+        .dp-wd {
+            text-align: center; font-size: 11px; font-weight: 800;
+            color: var(--text-muted); padding: 4px 0;
+        }
+        .dp-cell {
+            aspect-ratio: 1;
+            display: flex; align-items: center; justify-content: center;
+            border: none; border-radius: 11px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: inherit; font-size: 13px; font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .dp-cell:active { transform: scale(0.9); }
+        .dp-cell.dp-empty { background: transparent; cursor: default; }
+        .dp-cell.today { box-shadow: inset 0 0 0 2px var(--primary); }
+        .dp-cell.sel {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        /* ===== CURRENCY ROW ===== */
+        .cur-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .cur-row .form-input { padding: 11px 13px; font-size: 14px; }
+        .expense-meta .fx-flag {
+            color: var(--warning);
+            font-weight: 700;
+        }
+
+        /* ===== RECEIPT PHOTO ===== */
+        .photo-box { min-height: 44px; }
+        .photo-preview {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: var(--bg-tertiary);
+        }
+        .photo-preview img {
+            display: block;
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+        }
+        .photo-del {
+            position: absolute;
+            top: 8px; left: 8px;
+            width: 32px; height: 32px;
+            border: none; border-radius: 50%;
+            background: rgba(0,0,0,0.65);
+            color: #fff; font-size: 18px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .receipt-wrap {
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: var(--bg-tertiary);
+        }
+        .receipt-wrap img {
+            display: block;
+            width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+        }
+
+        /* four split modes need a tighter toggle */
+        .split-toggle-btn { padding: 9px 4px; font-size: 12px; }
+
+        @media print {
+            .receipt-wrap { display: none; }
+        }
+
+
 
         /* ===== PRINT REPORT (FIX #8: replaces jsPDF, renders Persian natively) ===== */
         #printArea { display: none; }
@@ -1717,7 +1839,7 @@
         </div>
         <div class="settings-section">
             <div class="settings-label">ℹ️ نسخه</div>
-            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v3.1 — محمد عباسی</div>
+            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v4.0 — محمد عباسی</div>
         </div>
     </div>
 
@@ -2048,7 +2170,7 @@
                         <button type="button" class="chip" data-act="quickDate" data-arg="1">دیروز</button>
                         <button type="button" class="chip" data-act="quickDate" data-arg="2">پریروز</button>
                     </div>
-                    <input type="date" class="form-input" id="expenseDate">
+                    <button type="button" class="form-input date-btn" id="expenseDateBtn" data-act="openDate"></button>
                     <div class="form-hint" id="expenseDateHint"></div>
                 </div>
                 <div class="form-group">
@@ -2056,6 +2178,14 @@
                         <span id="currencyLabel" style="font-weight:400; color: var(--text-muted); font-size:12px;">(تومان)</span>
                     </label>
                     <input type="text" class="form-input" id="expenseAmount" placeholder="۰" inputmode="numeric" autocomplete="off">
+                    <div class="cur-row">
+                        <select class="form-input form-select" id="expenseCurrency"></select>
+                        <div id="rateWrap" style="display:none;">
+                            <input type="text" class="form-input" id="expenseRate" inputmode="decimal"
+                                   placeholder="نرخ تبدیل" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-hint" id="rateHint"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">🏷️ دسته‌بندی</label>
@@ -2066,6 +2196,13 @@
                     <select class="form-input form-select" id="expensePayer"></select>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">عکس رسید (اختیاری)</label>
+                    <div id="photoBox" class="photo-box">
+                        <button type="button" class="btn btn-outline" style="width:100%;" data-act="pickPhoto">افزودن عکس</button>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" style="display:none;">
+                </div>
+                <div class="form-group">
                     <label class="form-label" for="expenseNote">یادداشت (اختیاری)</label>
                     <input type="text" class="form-input" id="expenseNote" placeholder="مثلاً: بدون نوشیدنی" maxlength="120">
                 </div>
@@ -2073,7 +2210,13 @@
                     <label class="form-label">👥 تقسیم بین</label>
                     <div class="split-toggle">
                         <button type="button" class="split-toggle-btn active" data-split="equal" data-act="splitType" data-arg="equal">مساوی</button>
-                        <button type="button" class="split-toggle-btn" data-split="custom" data-act="splitType" data-arg="custom">سفارشی</button>
+                        <button type="button" class="split-toggle-btn" data-split="shares" data-act="splitType" data-arg="shares">سهمی</button>
+                        <button type="button" class="split-toggle-btn" data-split="percent" data-act="splitType" data-arg="percent">درصدی</button>
+                        <button type="button" class="split-toggle-btn" data-split="custom" data-act="splitType" data-arg="custom">مبلغ دقیق</button>
+                    </div>
+                    <div id="splitWeightSection" style="display:none;">
+                        <div id="weightList"></div>
+                        <div class="custom-split-total" id="weightTotal"></div>
                     </div>
                     <div id="splitEqualSection">
                         <div class="split-quick">
@@ -2234,7 +2377,8 @@
                     داده‌های سفر را به صورت فایل JSON ذخیره یا بارگذاری کنید. این تنها راه انتقال سفر بین دستگاه‌ها و گرفتن پشتیبان است.
                 </p>
                 <button class="btn btn-success btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="export">📤 خروجی JSON</button>
-                <button class="btn btn-outline btn-lg" style="width: 100%;" data-act="importFile">📥 بارگذاری JSON</button>
+                <button class="btn btn-outline btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="importFile">📥 بارگذاری JSON</button>
+                <button class="btn btn-secondary btn-lg" style="width: 100%;" data-act="exportCsv">خروجی CSV برای اکسل</button>
             </div>
         </div>
     </div>
@@ -2255,6 +2399,17 @@
                     <button class="btn btn-danger" id="confirmBtn" data-act="confirmYes">تأیید</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Jalali date picker -->
+    <div id="datePickerModal" class="modal modal-center" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">انتخاب تاریخ</h3>
+                <button class="modal-close" data-act="close" data-arg="datePickerModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body" id="datePickerBody"></div>
         </div>
     </div>
 
@@ -2287,7 +2442,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '3.1.0';
+    const APP_VERSION    = '4.0.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -2451,57 +2606,331 @@
         try { return toPersian(new Date(ts).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })); }
         catch (e) { return ''; }
     }
-    // ===== EXPENSE DATE HELPERS =====
-    // A trip expense is usually entered after the fact ("we had dinner yesterday"),
-    // so the date it happened is tracked separately from when it was typed in.
-    function toDateInput(ts) {
+
+    // ========== JALALI (SHAMSI) CALENDAR ==========
+    // Self-contained conversion (Borkowski algorithm, same one jalaali-js uses).
+    // The rest of the app is Persian, so a Gregorian date picker was the one
+    // place the user had to convert in their head.
+    const JMONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور',
+                     'مهر','آبان','آذر','دی','بهمن','اسفند'];
+    const JWEEK = ['ش','ی','د','س','چ','پ','ج'];
+    const JBREAKS = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210,
+                     1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
+
+    // NOTE: this must truncate toward zero, not floor. The algorithm feeds it
+    // negative operands (e.g. gm - 8 for January) where floor is off by one,
+    // which shifts every Jan-Mar date into the previous year.
+    const idiv = (a, b) => Math.trunc(a / b);
+
+    function g2d(gy, gm, gd) {
+        let d = idiv((gy + idiv(gm - 8, 6) + 100100) * 1461, 4)
+              + idiv(153 * ((gm + 9) % 12) + 2, 5) + gd - 34840408;
+        d = d - idiv(idiv(gy + 100100 + idiv(gm - 8, 6), 100) * 3, 4) + 752;
+        return d;
+    }
+    function d2g(jdn) {
+        let j = 4 * jdn + 139361631;
+        j = j + idiv(idiv(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+        const i = idiv(j % 1461, 4) * 5 + 308;
+        const gd = idiv(i % 153, 5) + 1;
+        const gm = (idiv(i, 153) % 12) + 1;
+        const gy = idiv(j, 1461) - 100100 + idiv(8 - gm, 6);
+        return { gy: gy, gm: gm, gd: gd };
+    }
+    function jalCal(jy) {
+        const bl = JBREAKS.length;
+        const gy = jy + 621;
+        let leapJ = -14, jp = JBREAKS[0], jm, jump = 0, n, i;
+        if (jy < jp || jy >= JBREAKS[bl - 1]) return null;
+        for (i = 1; i < bl; i++) {
+            jm = JBREAKS[i];
+            jump = jm - jp;
+            if (jy < jm) break;
+            leapJ = leapJ + idiv(jump, 33) * 8 + idiv(jump % 33, 4);
+            jp = jm;
+        }
+        n = jy - jp;
+        leapJ = leapJ + idiv(n, 33) * 8 + idiv((n % 33) + 3, 4);
+        if ((jump % 33) === 4 && jump - n === 4) leapJ += 1;
+        const leapG = idiv(gy, 4) - idiv((idiv(gy, 100) + 1) * 3, 4) - 150;
+        const march = 20 + leapJ - leapG;
+        if (jump - n < 6) n = n - jump + idiv(jump + 4, 33) * 33;
+        let leap = (((n + 1) % 33) - 1) % 4;
+        if (leap === -1) leap = 4;
+        return { leap: leap, gy: gy, march: march };
+    }
+    function j2d(jy, jm, jd) {
+        const r = jalCal(jy);
+        if (!r) return null;
+        return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - idiv(jm, 7) * (jm - 7) + jd - 1;
+    }
+    function d2j(jdn) {
+        const gy = d2g(jdn).gy;
+        let jy = gy - 621;
+        const r = jalCal(jy);
+        if (!r) return null;
+        let k = jdn - g2d(r.gy, 3, r.march);
+        if (k >= 0) {
+            if (k <= 185) return { jy: jy, jm: 1 + idiv(k, 31), jd: (k % 31) + 1 };
+            k -= 186;
+        } else {
+            jy -= 1;
+            k += 179;
+            if (r.leap === 1) k += 1;
+        }
+        return { jy: jy, jm: 7 + idiv(k, 30), jd: (k % 30) + 1 };
+    }
+    function jIsLeap(jy) { const r = jalCal(jy); return !!r && r.leap === 0; }
+    function jMonthLength(jy, jm) {
+        if (jm <= 6) return 31;
+        if (jm <= 11) return 30;
+        return jIsLeap(jy) ? 30 : 29;
+    }
+
+    // timestamp <-> jalali date
+    function tsToJalali(ts) {
         const d = new Date(ts);
-        const pad = n => String(n).padStart(2, '0');
-        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        return d2j(g2d(d.getFullYear(), d.getMonth() + 1, d.getDate()));
     }
-    function fromDateInput(value, fallback) {
-        if (!value) return fallback;
-        const parts = String(value).split('-').map(Number);
-        if (parts.length !== 3 || parts.some(x => !Number.isFinite(x))) return fallback;
-        const d = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
-        return Number.isFinite(d.getTime()) ? d.getTime() : fallback;
+    function jalaliToTs(jy, jm, jd) {
+        const jdn = j2d(jy, jm, jd);
+        if (jdn == null) return Date.now();
+        const g = d2g(jdn);
+        return new Date(g.gy, g.gm - 1, g.gd, 12, 0, 0).getTime();
     }
+    function formatJalali(ts, withYear) {
+        const j = tsToJalali(ts);
+        if (!j) return formatDate(ts);
+        return toPersian(j.jd) + ' ' + JMONTHS[j.jm - 1] + (withYear ? ' ' + toPersian(j.jy) : '');
+    }
+
+    // ========== JALALI DATE PICKER ==========
+    let pickerTs = Date.now();      // value being edited
+    let pickerView = null;          // {jy, jm} month on screen
+    let pickerTarget = 'expense';   // which field the picker is editing
+
+    function openDatePicker(target) {
+        pickerTarget = target || 'expense';
+        pickerTs = (pickerTarget === 'expense') ? (expenseDateTs || Date.now()) : Date.now();
+        const j = tsToJalali(pickerTs);
+        pickerView = { jy: j.jy, jm: j.jm };
+        renderDatePicker();
+        showModal('datePickerModal');
+    }
+
+    function shiftPickerMonth(delta) {
+        let { jy, jm } = pickerView;
+        jm += Number(delta);
+        if (jm < 1) { jm = 12; jy -= 1; }
+        if (jm > 12) { jm = 1; jy += 1; }
+        pickerView = { jy, jm };
+        renderDatePicker();
+    }
+
+    function renderDatePicker() {
+        const { jy, jm } = pickerView;
+        const days = jMonthLength(jy, jm);
+        // weekday of the 1st: JS getDay() 0=Sunday, Persian week starts Saturday
+        const firstTs = jalaliToTs(jy, jm, 1);
+        const lead = (new Date(firstTs).getDay() + 1) % 7;
+
+        const sel = tsToJalali(pickerTs);
+        const today = tsToJalali(Date.now());
+
+        let cells = '';
+        for (let i = 0; i < lead; i++) cells += '<span class="dp-cell dp-empty"></span>';
+        for (let d = 1; d <= days; d++) {
+            const isSel = sel.jy === jy && sel.jm === jm && sel.jd === d;
+            const isToday = today.jy === jy && today.jm === jm && today.jd === d;
+            cells += '<button type="button" class="dp-cell' + (isSel ? ' sel' : '') +
+                     (isToday ? ' today' : '') + '" data-act="pickDay" data-arg="' + d + '">' +
+                     toPersian(d) + '</button>';
+        }
+
+        setHTML('datePickerBody',
+            '<div class="dp-head">' +
+            '<button type="button" class="dp-nav" data-act="pickerMonth" data-arg="-1" aria-label="ماه قبل">&#8250;</button>' +
+            '<div class="dp-title">' + JMONTHS[jm - 1] + ' ' + toPersian(jy) + '</div>' +
+            '<button type="button" class="dp-nav" data-act="pickerMonth" data-arg="1" aria-label="ماه بعد">&#8249;</button>' +
+            '</div>' +
+            '<div class="dp-grid dp-week">' + JWEEK.map(w => '<span class="dp-wd">' + w + '</span>').join('') + '</div>' +
+            '<div class="dp-grid">' + cells + '</div>'
+        );
+    }
+
+    function pickDay(d) {
+        pickerTs = jalaliToTs(pickerView.jy, pickerView.jm, Number(d));
+        if (pickerTarget === 'expense') {
+            expenseDateTs = pickerTs;
+            updateExpenseDateHint();
+        }
+        hideModal('datePickerModal');
+        vibrate(5);
+    }
+
+    // ========== EXPENSE DATE FIELD (Jalali) ==========
+    let expenseDateTs = Date.now();
+
+    function setQuickDate(daysBack) {
+        expenseDateTs = startOfDay(Date.now() - Number(daysBack) * 86400000) + 43200000;
+        updateExpenseDateHint();
+        vibrate(5);
+    }
+
+    function updateExpenseDateHint() {
+        const btn = $('expenseDateBtn');
+        const hint = $('expenseDateHint');
+        if (btn) btn.textContent = formatJalali(expenseDateTs, true);
+        if (hint) hint.textContent = dayLabel(expenseDateTs);
+        document.querySelectorAll('.date-quick .chip').forEach(c => {
+            const back = Number(c.dataset.arg);
+            c.classList.toggle('active',
+                startOfDay(expenseDateTs) === startOfDay(Date.now() - back * 86400000));
+        });
+    }
+
+    // ========== WEIGHTED SPLIT MATH (percent / shares) ==========
+    // Splitting by percentage or by weights ("a couple counts as 2") used to
+    // require doing the arithmetic by hand and entering exact amounts.
+    // Largest-remainder allocation guarantees the parts still sum to the whole.
+    function allocateByWeights(total, ids, weights) {
+        const out = {};
+        const w = ids.map(id => Math.max(0, Number(weights[id]) || 0));
+        const sum = w.reduce((a, b) => a + b, 0);
+        if (sum <= 0) {                      // degenerate -> fall back to equal
+            const base = Math.floor(total / ids.length);
+            const rem = total - base * ids.length;
+            ids.forEach((id, i) => { out[id] = base + (i < rem ? 1 : 0); });
+            return out;
+        }
+        const exact = ids.map((id, i) => (total * w[i]) / sum);
+        const floors = exact.map(Math.floor);
+        let left = total - floors.reduce((a, b) => a + b, 0);
+        // hand the leftover units to the largest fractional parts first
+        const order = exact
+            .map((v, i) => ({ i: i, frac: v - Math.floor(v) }))
+            .sort((a, b) => b.frac - a.frac || a.i - b.i);
+        const bump = new Array(ids.length).fill(0);
+        for (let k = 0; k < order.length && left > 0; k++, left--) bump[order[k].i] = 1;
+        ids.forEach((id, i) => { out[id] = floors[i] + bump[i]; });
+        return out;
+    }
+
+    // ========== MULTI-CURRENCY ==========
+    // Each expense can be recorded in the currency it was actually paid in,
+    // with a rate back to the trip currency. Rates are entered by hand rather
+    // than fetched, so the app keeps working offline and the numbers stay
+    // reproducible months later instead of drifting with a live feed.
+    const CURRENCIES = ['تومان', 'ریال', 'دلار', 'یورو', 'درهم', 'لیر', 'روبل', 'یوان', 'پوند', 'روپیه'];
+
+    function tripCurrency() { return (currentTrip && currentTrip.currency) || 'تومان'; }
+
+    // amount as recorded * rate = amount in the trip currency
+    function baseAmount(exp) {
+        if (!exp.currency || exp.currency === tripCurrency()) return exp.amount;
+        return Math.round(exp.amount * (Number(exp.rate) > 0 ? Number(exp.rate) : 1));
+    }
+    function isForeign(exp) {
+        return !!(exp.currency && exp.currency !== tripCurrency());
+    }
+    function rememberRate(currency, rate) {
+        if (!currentTrip || !currency || !(rate > 0)) return;
+        if (!currentTrip.rates) currentTrip.rates = {};
+        currentTrip.rates[currency] = rate;
+    }
+    function lastRate(currency) {
+        if (!currentTrip || !currentTrip.rates) return null;
+        const r = Number(currentTrip.rates[currency]);
+        return r > 0 ? r : null;
+    }
+
+    // ========== RECEIPT PHOTOS (IndexedDB) ==========
+    // Photos live in IndexedDB, not localStorage: a single receipt would blow
+    // the ~5MB localStorage budget that the whole trip has to fit inside.
+    const PHOTO_DB = 'safarino_photos';
+    const PHOTO_STORE = 'photos';
+    let _photoDb = null;
+
+    function photoDb() {
+        if (_photoDb) return Promise.resolve(_photoDb);
+        return new Promise((resolve, reject) => {
+            if (!window.indexedDB) { reject(new Error('no indexeddb')); return; }
+            const req = indexedDB.open(PHOTO_DB, 1);
+            req.onupgradeneeded = () => {
+                const db = req.result;
+                if (!db.objectStoreNames.contains(PHOTO_STORE)) db.createObjectStore(PHOTO_STORE);
+            };
+            req.onsuccess = () => { _photoDb = req.result; resolve(_photoDb); };
+            req.onerror = () => reject(req.error);
+        });
+    }
+    function photoPut(id, dataUrl) {
+        return photoDb().then(db => new Promise((res, rej) => {
+            const tx = db.transaction(PHOTO_STORE, 'readwrite');
+            tx.objectStore(PHOTO_STORE).put(dataUrl, id);
+            tx.oncomplete = () => res(true);
+            tx.onerror = () => rej(tx.error);
+        }));
+    }
+    function photoGet(id) {
+        if (!id) return Promise.resolve(null);
+        return photoDb().then(db => new Promise((res) => {
+            const tx = db.transaction(PHOTO_STORE, 'readonly');
+            const r = tx.objectStore(PHOTO_STORE).get(id);
+            r.onsuccess = () => res(r.result || null);
+            r.onerror = () => res(null);
+        })).catch(() => null);
+    }
+    function photoDelete(id) {
+        if (!id) return Promise.resolve();
+        return photoDb().then(db => new Promise((res) => {
+            const tx = db.transaction(PHOTO_STORE, 'readwrite');
+            tx.objectStore(PHOTO_STORE).delete(id);
+            tx.oncomplete = () => res();
+            tx.onerror = () => res();
+        })).catch(() => {});
+    }
+
+    // Downscale before storing - a modern phone photo is 3-5MB, which is far
+    // more than a receipt needs and would make JSON export unusable.
+    function compressImage(file, maxDim, quality) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    const scale = Math.min(1, maxDim / Math.max(width, height));
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+                    catch (e) { reject(e); }
+                };
+                img.onerror = () => reject(new Error('bad image'));
+                img.src = reader.result;
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ===== DAY HELPERS =====
     function startOfDay(ts) {
         const d = new Date(ts);
         d.setHours(0, 0, 0, 0);
         return d.getTime();
     }
     function dayLabel(ts) {
-        const today = startOfDay(Date.now());
-        const day = startOfDay(ts);
-        const diff = Math.round((today - day) / 86400000);
+        const diff = Math.round((startOfDay(Date.now()) - startOfDay(ts)) / 86400000);
         if (diff === 0) return 'امروز';
         if (diff === 1) return 'دیروز';
         if (diff === 2) return 'پریروز';
         if (diff > 0 && diff < 7) return toPersian(diff) + ' روز پیش';
-        try {
-            return toPersian(new Date(ts).toLocaleDateString('fa-IR',
-                { year: 'numeric', month: 'long', day: 'numeric' }));
-        } catch (e) { return formatDate(ts); }
-    }
-    function updateExpenseDateHint() {
-        const hint = $('expenseDateHint');
-        const input = $('expenseDate');
-        if (!hint || !input) return;
-        const ts = fromDateInput(input.value, null);
-        hint.textContent = ts == null ? '' : dayLabel(ts);
-        document.querySelectorAll('.date-quick .chip').forEach(c => {
-            const back = Number(c.dataset.arg);
-            const target = toDateInput(Date.now() - back * 86400000);
-            c.classList.toggle('active', input.value === target);
-        });
-    }
-    function setQuickDate(daysBack) {
-        const input = $('expenseDate');
-        if (!input) return;
-        input.value = toDateInput(Date.now() - Number(daysBack) * 86400000);
-        updateExpenseDateHint();
-        vibrate(5);
+        if (diff === -1) return 'فردا';
+        return formatJalali(ts, true);
     }
 
     function formatDateTime(ts) {
@@ -2681,6 +3110,26 @@
                 issues.push('هزینه‌ای بدون شریک معتبر بود و کامل به پرداخت‌کننده نسبت داده شد.');
             }
 
+            const cur = str(e.currency, 12, '');
+            let rate = Number(e.rate);
+            if (!Number.isFinite(rate) || rate <= 0) rate = 1;
+
+            let splitWeights = null;
+            if (e.splitType === 'percent' || e.splitType === 'shares') {
+                splitWeights = {};
+                let wsum = 0;
+                split.forEach(mid => {
+                    const src = (e.splitWeights && typeof e.splitWeights === 'object') ? e.splitWeights : {};
+                    const w = Math.max(0, Number(src[String(mid)]) || 0);
+                    splitWeights[mid] = w;
+                    wsum += w;
+                });
+                if (wsum <= 0) {
+                    splitWeights = null;
+                    issues.push('وزن‌های تقسیم یک هزینه نامعتبر بود و مساوی تقسیم شد.');
+                }
+            }
+
             let customAmounts = null;
             if (e.splitType === 'custom') {
                 customAmounts = {};
@@ -2703,14 +3152,20 @@
                 }
             }
 
+            const mode = splitWeights ? (e.splitType === 'percent' ? 'percent' : 'shares')
+                       : (customAmounts ? 'custom' : 'equal');
             expenses.push({
                 id: id,
                 title: str(e.title, 80, 'بدون عنوان'),
                 amount: amount,
+                currency: cur,
+                rate: rate,
+                splitWeights: splitWeights,
+                photoId: (typeof e.photoId === 'string' && ID_RE.test(e.photoId)) ? e.photoId : null,
                 category: CATEGORY_IDS.has(e.category) ? e.category : 'other',
                 payerId: payerId,
                 splitBetween: split,
-                splitType: customAmounts ? 'custom' : 'equal',
+                splitType: mode,
                 customAmounts: customAmounts,
                 note: str(e.note, 120, ''),
                 createdAt: Number.isFinite(e.createdAt) ? e.createdAt : Date.now(),
@@ -2743,6 +3198,7 @@
             trip: {
                 code: code, name: name, date: date, currency: currency, adminId: adminId,
                 members: members, expenses: expenses, payments: payments,
+                rates: (raw.rates && typeof raw.rates === 'object') ? raw.rates : {},
                 createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : Date.now(),
                 lastModified: Date.now(),
                 appVersion: APP_VERSION,
@@ -2782,19 +3238,25 @@
         const ids = exp.splitBetween || [];
         const count = ids.length;
         if (!count) return shares;
+        const total = baseAmount(exp);
+
+        if ((exp.splitType === 'percent' || exp.splitType === 'shares') && exp.splitWeights) {
+            return allocateByWeights(total, ids, exp.splitWeights);
+        }
 
         if (exp.splitType === 'custom' && exp.customAmounts) {
             let sum = 0;
+            const fx = total === exp.amount ? 1 : (total / exp.amount);
             ids.forEach(id => {
-                const v = Math.max(0, toInt(exp.customAmounts[id]));
+                const v = Math.max(0, Math.round(toInt(exp.customAmounts[id]) * fx));
                 shares[id] = v;
                 sum += v;
             });
-            const drift = exp.amount - sum;
+            const drift = total - sum;
             if (drift !== 0) shares[ids[0]] = Math.max(0, shares[ids[0]] + drift);
         } else {
-            const base = Math.floor(exp.amount / count);
-            const remainder = exp.amount - base * count;
+            const base = Math.floor(total / count);
+            const remainder = total - base * count;
             // Rotate who absorbs the leftover rial. Always giving it to the first
             // member in the list quietly overcharges that one person across a long
             // trip (300 shared expenses cost them ~1 unit each). The offset is a
@@ -2827,7 +3289,7 @@
         currentTrip.members.forEach(m => ensure(m.id));
 
         currentTrip.expenses.forEach(e => {
-            ensure(e.payerId).paid += e.amount;
+            ensure(e.payerId).paid += baseAmount(e);
             const sh = expenseShares(e);
             for (const id in sh) ensure(id).share += sh[id];
         });
@@ -2847,7 +3309,7 @@
     }
     function balanceOf(id) { return ledgerOf(id).balance; }
     function totalExpenses() {
-        return currentTrip ? currentTrip.expenses.reduce((s, e) => s + e.amount, 0) : 0;
+        return currentTrip ? currentTrip.expenses.reduce((s, e) => s + baseAmount(e), 0) : 0;
     }
 
     /**
@@ -3553,14 +4015,17 @@
     // custom-split expense left stale shares and money vanished from the books.
     // Add and edit now drive the exact same form and the same validation.
 
+    const SPLIT_MODES = ['equal', 'shares', 'percent', 'custom'];
     function setSplitType(type) {
-        splitType = (type === 'custom') ? 'custom' : 'equal';
+        splitType = SPLIT_MODES.indexOf(type) >= 0 ? type : 'equal';
         vibrate(5);
         document.querySelectorAll('.split-toggle-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.split === splitType);
         });
-        $('splitEqualSection').style.display = splitType === 'equal' ? 'block' : 'none';
-        $('splitCustomSection').style.display = splitType === 'custom' ? 'block' : 'none';
+        $('splitEqualSection').style.display  = splitType === 'equal'   ? 'block' : 'none';
+        $('splitCustomSection').style.display = splitType === 'custom'  ? 'block' : 'none';
+        $('splitWeightSection').style.display =
+            (splitType === 'shares' || splitType === 'percent') ? 'block' : 'none';
         updateSplitSummary();
     }
 
@@ -3579,8 +4044,22 @@
 
         $('expenseTitle').value = editing ? editing.title : '';
         $('expenseNote').value = editing && editing.note ? editing.note : '';
-        $('expenseDate').value = toDateInput(editing ? (editing.spentAt || editing.createdAt) : Date.now());
+        expenseDateTs = editing ? (editing.spentAt || editing.createdAt) : Date.now();
         updateExpenseDateHint();
+
+        // currency selector (trip currency first, then the rest)
+        const base = tripCurrency();
+        const curList = [base].concat(CURRENCIES.filter(c => c !== base));
+        const curSel = editing && editing.currency ? editing.currency : base;
+        $('expenseCurrency').innerHTML = curList.map(c =>
+            '<option value="' + esc(c) + '"' + (c === curSel ? ' selected' : '') + '>' + esc(c) + '</option>').join('');
+        $('expenseRate').value = editing && editing.rate && editing.rate !== 1
+            ? String(editing.rate) : (lastRate(curSel) ? String(lastRate(curSel)) : '');
+        updateCurrencyRow();
+
+        currentPhotoData = null;
+        currentPhotoId = editing && editing.photoId ? editing.photoId : null;
+        renderPhotoBox();
         $('expenseAmount').value = editing ? formatNumber(editing.amount) : '';
         setText('currencyLabel', '(' + getCurrency() + ')');
 
@@ -3618,6 +4097,18 @@
                    'autocomplete="off" value="' + esc(val) + '"></div>';
         }).join('');
 
+        $('weightList').innerHTML = pool.map(m => {
+            let val = '';
+            if (editing && editing.splitWeights && editing.splitWeights[m.id] != null) {
+                val = String(editing.splitWeights[m.id]);
+            }
+            return '<div class="custom-split-item"><div class="info">' +
+                   '<span class="avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="name">' + esc(m.name) + '</span></div>' +
+                   '<input type="text" data-weight="' + esc(m.id) + '" placeholder="1" ' +
+                   'inputmode="decimal" autocomplete="off" value="' + esc(val) + '"></div>';
+        }).join('');
+
         setSplitType(editing ? editing.splitType : 'equal');
         showModal('expenseModal');
     }
@@ -3626,6 +4117,25 @@
         return Array.prototype.map.call(
             document.querySelectorAll('#splitMembersList input:checked'), cb => cb.value);
     }
+    function weightEntries() {
+        return Array.prototype.map.call(
+            document.querySelectorAll('#weightList input'),
+            inp => ({ id: inp.dataset.weight, w: Math.max(0, Number(normalizeDigits(inp.value)) || 0) }));
+    }
+    function updateCurrencyRow() {
+        const cur = $('expenseCurrency').value;
+        const foreign = cur !== tripCurrency();
+        $('rateWrap').style.display = foreign ? 'block' : 'none';
+        const hint = $('rateHint');
+        if (!foreign) { hint.textContent = ''; return; }
+        const rate = Number(normalizeDigits($('expenseRate').value)) || 0;
+        const amt = parsePositiveAmount($('expenseAmount').value) || 0;
+        hint.textContent = rate > 0
+            ? ('هر ۱ ' + cur + ' = ' + formatNumber(rate) + ' ' + tripCurrency() +
+               (amt ? '  →  ' + formatNumber(amt * rate) + ' ' + tripCurrency() : ''))
+            : ('نرخ تبدیل هر ۱ ' + cur + ' به ' + tripCurrency() + ' را وارد کنید');
+    }
+
     function customSplitEntries() {
         return Array.prototype.map.call(
             document.querySelectorAll('#customSplitList input'),
@@ -3646,6 +4156,36 @@
             const rem = amount - base * ids.length;
             hint.textContent = toPersian(ids.length) + ' نفر - هر نفر ' + formatNumber(base) +
                 (rem ? ' تا ' + formatNumber(base + 1) : '') + ' ' + cur;
+            return;
+        }
+
+        if (splitType === 'shares' || splitType === 'percent') {
+            const el = $('weightTotal');
+            if (!el) return;
+            const rows = weightEntries().filter(e => e.w > 0);
+            const sum = rows.reduce((s, e) => s + e.w, 0);
+            if (!rows.length) {
+                el.className = 'custom-split-total mismatch';
+                el.textContent = 'برای حداقل یک نفر عدد وارد کنید';
+                return;
+            }
+            if (splitType === 'percent' && Math.abs(sum - 100) > 0.001) {
+                el.className = 'custom-split-total mismatch';
+                el.textContent = 'مجموع درصدها ' + formatNumber(sum) + ' است، باید ۱۰۰ شود';
+                return;
+            }
+            el.className = 'custom-split-total match';
+            if (!amount) {
+                el.textContent = splitType === 'percent'
+                    ? 'مجموع درصدها ۱۰۰ است' : 'مجموع سهم‌ها: ' + formatNumber(sum);
+                return;
+            }
+            const rate = Number(normalizeDigits(($('expenseRate') || {}).value)) || 1;
+            const base = $('expenseCurrency').value === tripCurrency() ? amount : Math.round(amount * rate);
+            const alloc = allocateByWeights(base, rows.map(r => r.id),
+                rows.reduce((o, r) => { o[r.id] = r.w; return o; }, {}));
+            const parts = rows.map(r => formatNumber(alloc[r.id])).join(' / ');
+            el.textContent = parts + ' ' + cur;
             return;
         }
 
@@ -3707,8 +4247,11 @@
         const amount = parsePositiveAmount($('expenseAmount').value);
         const payerId = $('expensePayer').value;
         const note = $('expenseNote').value.trim().slice(0, 120);
-        const spentAt = fromDateInput($('expenseDate').value,
-                                      editing ? (editing.spentAt || editing.createdAt) : Date.now());
+        const spentAt = expenseDateTs;
+        const currency = $('expenseCurrency').value;
+        const foreign = currency !== tripCurrency();
+        const rate = foreign ? (Number(normalizeDigits($('expenseRate').value)) || 0) : 1;
+        if (foreign && !(rate > 0)) { showToast('نرخ تبدیل را وارد کنید', 'error'); return; }
 
         if (!title) { showToast('عنوان هزینه را وارد کنید', 'error'); return; }
         if (!amount) { showToast('مبلغ معتبر وارد کنید', 'error'); return; }
@@ -3716,8 +4259,21 @@
 
         let splitBetween = [];
         let customAmounts = null;
+        let splitWeights = null;
 
-        if (splitType === 'custom') {
+        if (splitType === 'shares' || splitType === 'percent') {
+            const rows = weightEntries().filter(e => e.w > 0 && getMember(e.id));
+            if (!rows.length) { showToast('برای حداقل یک نفر عدد وارد کنید', 'error'); return; }
+            if (splitType === 'percent') {
+                const sum = rows.reduce((s, e) => s + e.w, 0);
+                if (Math.abs(sum - 100) > 0.001) {
+                    showToast('مجموع درصدها باید ۱۰۰ شود (الان ' + formatNumber(sum) + ')', 'error', 5000);
+                    return;
+                }
+            }
+            splitBetween = rows.map(r => r.id);
+            splitWeights = rows.reduce((o, r) => { o[r.id] = r.w; return o; }, {});
+        } else if (splitType === 'custom') {
             const entries = customSplitEntries().filter(e => e.amount > 0 && getMember(e.id));
             if (!entries.length) { showToast('برای حداقل یک نفر مبلغ وارد کنید', 'error'); return; }
             const sum = entries.reduce((s, e) => s + e.amount, 0);
@@ -3734,6 +4290,9 @@
             if (!splitBetween.length) { showToast('حداقل یک نفر انتخاب کنید', 'error'); return; }
         }
 
+        // must run before the expense object is built - it assigns currentPhotoId
+        persistPendingPhoto();
+
         if (editing) {
             const before = JSON.parse(JSON.stringify(editing));
             editing.title = title.slice(0, 80);
@@ -3745,7 +4304,12 @@
             editing.customAmounts = customAmounts;
             editing.note = note;
             editing.spentAt = spentAt;
+            editing.splitWeights = splitWeights;
+            editing.currency = currency;
+            editing.rate = rate;
+            editing.photoId = currentPhotoId;
 
+            if (foreign) rememberRate(currency, rate);
             touch(); saveToStorage(); hideModal('expenseModal'); renderAll();
             actionWithUndo('هزینه بروزرسانی شد', 'ویرایش هزینه', () => {
                 Object.assign(editing, before);
@@ -3760,11 +4324,16 @@
                 splitBetween: splitBetween,
                 splitType: splitType,
                 customAmounts: customAmounts,
+                splitWeights: splitWeights,
+                currency: currency,
+                rate: rate,
+                photoId: currentPhotoId,
                 note: note,
                 createdAt: Date.now(),
                 spentAt: spentAt
             };
             currentTrip.expenses.push(expense);
+            if (foreign) rememberRate(currency, rate);
             touch(); saveToStorage(); hideModal('expenseModal'); renderAll();
             actionWithUndo('هزینه ثبت شد', 'ثبت هزینه', () => {
                 const i = currentTrip.expenses.findIndex(e => e.id === expense.id);
@@ -3795,7 +4364,9 @@
             '<div style="font-size:48px;margin-bottom:12px;">' + esc(cat.icon) + '</div>' +
             '<h3 style="font-size:18px;margin-bottom:8px;">' + esc(exp.title) + '</h3>' +
             '<div style="font-size:24px;font-weight:900;color:var(--primary);">' +
-            formatNumber(exp.amount) + ' ' + cur + '</div>' +
+            formatNumber(baseAmount(exp)) + ' ' + cur + '</div>' +
+            (isForeign(exp) ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' +
+                formatNumber(exp.amount) + ' ' + esc(exp.currency) + ' (نرخ ' + formatNumber(exp.rate) + ')</div>' : '') +
             '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">' +
             esc(dayLabel(exp.spentAt || exp.createdAt)) + '</div></div>' +
             (exp.note ? '<div class="banner info" style="margin-bottom:14px;">' +
@@ -3806,11 +4377,21 @@
             '<div class="info-row"><span>دسته‌بندی</span><span>' + esc(cat.icon) + ' ' + esc(cat.name) + '</span></div>' +
             '<div class="info-row"><span>تقسیم بین</span><span>' + toPersian(exp.splitBetween.length) + ' نفر</span></div>' +
             '<div class="info-row"><span>نوع تقسیم</span><span>' +
-            (exp.splitType === 'custom' ? 'سفارشی' : 'مساوی') + '</span></div></div>' +
+            ({ equal: 'مساوی', custom: 'مبلغ دقیق', percent: 'درصدی', shares: 'سهمی' }[exp.splitType] || 'مساوی') +
+            '</span></div></div>' +
+            (exp.photoId ? '<div class="divider">رسید</div><div class="receipt-wrap">' +
+                '<img id="detailReceipt" alt="عکس رسید"></div>' : '') +
             '<div class="divider">سهم هر نفر</div>' +
             '<div class="split-members-list">' + rows + '</div>'
         );
         showModal('expenseDetailModal');
+        if (exp.photoId) {
+            photoGet(exp.photoId).then(d => {
+                const img = $('detailReceipt');
+                if (img && d) img.src = d;
+                else if (img) img.parentElement.innerHTML = '<span class="form-hint">عکس در این دستگاه ذخیره نشده</span>';
+            });
+        }
     }
 
     function editCurrentExpense() {
@@ -3829,8 +4410,10 @@
         $('expenseTitle').value = src.title;
         $('expenseAmount').value = formatNumber(src.amount);
         $('expenseNote').value = src.note || '';
-        $('expenseDate').value = toDateInput(Date.now());
+        expenseDateTs = Date.now();
         updateExpenseDateHint();
+        if (src.currency) { $('expenseCurrency').value = src.currency; $('expenseRate').value = String(src.rate || 1); }
+        updateCurrencyRow();
         selectedCategory = src.category;
         renderCategoryGrid('categoryGrid', selectedCategory);
         const payerSel = $('expensePayer');
@@ -3844,6 +4427,12 @@
                 inp.value = v ? formatNumber(v) : '';
             });
             setSplitType('custom');
+        } else if ((src.splitType === 'percent' || src.splitType === 'shares') && src.splitWeights) {
+            document.querySelectorAll('#weightList input').forEach(inp => {
+                const v = src.splitWeights[inp.dataset.weight];
+                inp.value = v ? String(v) : '';
+            });
+            setSplitType(src.splitType);
         } else {
             setSplitType('equal');
         }
@@ -4072,8 +4661,10 @@
                '<div class="expense-meta"><span>' + esc(payer ? payer.name : 'نامشخص') + '</span>' +
                '<span class="dot"></span><span>' + esc(cat.name) + '</span>' +
                (exp.note ? '<span class="dot"></span><span class="note-flag">یادداشت</span>' : '') +
+               (isForeign(exp) ? '<span class="dot"></span><span class="fx-flag">' + esc(exp.currency) + '</span>' : '') +
+               (exp.photoId ? '<span class="dot"></span><span class="note-flag">رسید</span>' : '') +
                '</div></div>' +
-               '<div class="expense-right"><div class="expense-amount">' + formatNumber(exp.amount) + '</div>' +
+               '<div class="expense-right"><div class="expense-amount">' + formatNumber(baseAmount(exp)) + '</div>' +
                (mine ? '<div class="expense-share">سهم شما ' + formatNumber(mine) + '</div>'
                      : '<div class="expense-share muted">سهمی ندارید</div>') +
                '</div></div>';
@@ -4090,7 +4681,7 @@
             current.items.push(e);
         });
         return groups.map(g => {
-            const dayTotal = g.items.reduce((sum, e) => sum + e.amount, 0);
+            const dayTotal = g.items.reduce((sum, e) => sum + baseAmount(e), 0);
             return '<div class="day-head"><span class="day-name">' + esc(dayLabel(g.key)) + '</span>' +
                    '<span class="day-total">' + formatNumber(dayTotal) + ' ' + esc(getCurrency()) + '</span></div>' +
                    g.items.map(expenseItemHTML).join('');
@@ -4191,7 +4782,9 @@
         const total = totalExpenses();
         const n = currentTrip.expenses.length;
         const avg = n ? Math.round(total / n) : 0;
-        const max = currentTrip.expenses.reduce((m, e) => (e.amount > m.amount ? e : m), { amount: 0, title: '-' });
+        const max = currentTrip.expenses.reduce(
+            (m, e) => (baseAmount(e) > m.amount ? { amount: baseAmount(e), title: e.title } : m),
+            { amount: 0, title: '-' });
         const active = getActiveMembers();
         const settledTotal = (currentTrip.payments || []).reduce((s, p) => s + p.amount, 0);
 
@@ -4234,7 +4827,7 @@
         CATEGORIES.forEach(c => { totals[c.id] = 0; });
         currentTrip.expenses.forEach(e => {
             const key = CATEGORY_IDS.has(e.category) ? e.category : 'other';   // FIX #22
-            totals[key] += e.amount;
+            totals[key] += baseAmount(e);
         });
 
         const slices = CATEGORIES.filter(c => totals[c.id] > 0);
@@ -4346,7 +4939,7 @@
                          '<td>' + esc(getCategoryInfo(e.category).name) + '</td>' +
                          '<td>' + esc(payer ? payer.name : 'نامشخص') + '</td>' +
                          '<td class="num">' + toPersian(e.splitBetween.length) + '</td>' +
-                         '<td class="num">' + formatNumber(e.amount) + '</td>' +
+                         '<td class="num">' + formatNumber(baseAmount(e)) + '</td>' +
                          '<td>' + esc(formatDate(e.spentAt || e.createdAt)) + '</td></tr>';
               }).join('') + '</tbody></table>'
             : '<div class="pr-empty">هزینه‌ای ثبت نشده است.</div>');
@@ -4361,6 +4954,118 @@
         buildPrintReport();
         showToast('پنجره چاپ باز می‌شود. مقصد را روی ذخیره به صورت PDF بگذارید.', 'info', 4000);
         setTimeout(() => { try { window.print(); } catch (e) { showToast('چاپ ممکن نشد', 'error'); } }, 350);
+    }
+
+
+    // ========== PHOTO UI ==========
+    let currentPhotoId = null;      // id already stored for the expense being edited
+    let currentPhotoData = null;    // freshly picked image, written on save
+
+    function renderPhotoBox() {
+        const box = $('photoBox');
+        if (!box) return;
+        if (currentPhotoData) {
+            box.innerHTML = '<div class="photo-preview"><img src="' + currentPhotoData + '" alt="رسید">' +
+                '<button type="button" class="photo-del" data-act="dropPhoto" aria-label="حذف عکس">×</button></div>';
+            return;
+        }
+        if (currentPhotoId) {
+            box.innerHTML = '<div class="photo-preview"><img id="photoThumb" alt="رسید">' +
+                '<button type="button" class="photo-del" data-act="dropPhoto" aria-label="حذف عکس">×</button></div>';
+            photoGet(currentPhotoId).then(d => {
+                const el = $('photoThumb');
+                if (el && d) el.src = d;
+                else if (el) el.closest('.photo-preview').innerHTML = '<span class="form-hint">عکس یافت نشد</span>';
+            });
+            return;
+        }
+        box.innerHTML = '<button type="button" class="btn btn-outline" style="width:100%;" data-act="pickPhoto">افزودن عکس</button>';
+    }
+
+    function pickPhoto() { const i = $('photoInput'); if (i) i.click(); }
+
+    function handlePhotoPick(event) {
+        const file = event.target.files && event.target.files[0];
+        event.target.value = '';
+        if (!file) return;
+        if (!/^image\//.test(file.type)) { showToast('فقط فایل تصویری', 'error'); return; }
+        showToast('در حال فشرده‌سازی عکس...', 'info', 2000);
+        compressImage(file, 1280, 0.7)
+            .then(dataUrl => {
+                if (dataUrl.length > 1500000) { showToast('عکس خیلی بزرگ است', 'error'); return; }
+                currentPhotoData = dataUrl;
+                renderPhotoBox();
+                showToast('عکس اضافه شد', 'success');
+            })
+            .catch(() => showToast('خواندن عکس ممکن نشد', 'error'));
+    }
+
+    function dropPhoto() {
+        currentPhotoData = null;
+        if (currentPhotoId) { photoDelete(currentPhotoId); currentPhotoId = null; }
+        renderPhotoBox();
+    }
+
+    // called from saveExpense once the expense object exists
+    function persistPendingPhoto() {
+        if (!currentPhotoData) return;
+        const id = currentPhotoId || generateId();
+        currentPhotoId = id;
+        photoPut(id, currentPhotoData).catch(() => showToast('ذخیره عکس ممکن نشد', 'error'));
+        currentPhotoData = null;
+    }
+
+    // ========== CSV EXPORT ==========
+    // Spreadsheets are how most people actually want to audit a trip afterwards.
+    function csvCell(v) {
+        const s = String(v == null ? '' : v);
+        return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    function exportCSV() {
+        if (!currentTrip) return;
+        const cur = tripCurrency();
+        const header = ['تاریخ', 'عنوان', 'دسته', 'پرداخت‌کننده', 'مبلغ', 'ارز', 'نرخ',
+                        'مبلغ به ' + cur, 'نوع تقسیم', 'شرکا', 'یادداشت'];
+        const rows = currentTrip.expenses
+            .slice()
+            .sort((a, b) => (a.spentAt || a.createdAt) - (b.spentAt || b.createdAt))
+            .map(e => {
+                const payer = getMember(e.payerId);
+                const names = e.splitBetween.map(id => (getMember(id) || {}).name || '?').join(' + ');
+                const modes = { equal: 'مساوی', custom: 'مبلغ دقیق', percent: 'درصدی', shares: 'سهمی' };
+                return [
+                    formatJalali(e.spentAt || e.createdAt, true),
+                    e.title,
+                    getCategoryInfo(e.category).name,
+                    payer ? payer.name : 'نامشخص',
+                    e.amount,
+                    e.currency || cur,
+                    e.rate || 1,
+                    baseAmount(e),
+                    modes[e.splitType] || 'مساوی',
+                    names,
+                    e.note || ''
+                ];
+            });
+
+        const ledger = computeLedger();
+        const balanceRows = currentTrip.members.map(m => {
+            const l = ledger.get(m.id) || { paid: 0, share: 0, balance: 0 };
+            return ['', 'مانده: ' + m.name, '', '', '', '', '', l.balance, '', '', ''];
+        });
+
+        const all = [header].concat(rows, [[]], [['', 'وضعیت اعضا', '', '', '', '', '', '', '', '', '']], balanceRows);
+        // BOM so Excel opens the Persian text in UTF-8
+        const csv = '﻿' + all.map(r => r.map(csvCell).join(',')).join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'safarino_' + safeFileName(currentTrip.name) + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        hideModal('importExportModal');
+        showToast('فایل CSV آماده شد', 'success');
     }
 
     // ========== IMPORT / EXPORT ==========
@@ -4485,6 +5190,12 @@
         splitClear:   () => splitClearCustom(),
         splitDistribute: () => splitDistribute(),
         quickDate:    arg => setQuickDate(arg),
+        openDate:     () => openDatePicker('expense'),
+        pickerMonth:  arg => shiftPickerMonth(arg),
+        pickDay:      arg => pickDay(arg),
+        pickPhoto:    () => pickPhoto(),
+        dropPhoto:    () => dropPhoto(),
+        exportCsv:    () => exportCSV(),
         dupExpense:   () => duplicateCurrentExpense(),
 
         addMember:    () => addMember(),
@@ -4584,9 +5295,15 @@
         const t = e.target;
         if (t.id === 'expenseAmount') {
             formatAmountField(t);
+            updateCurrencyRow();
             updateSplitSummary();
         } else if (t.closest && t.closest('#customSplitList')) {
             formatAmountField(t);
+            updateSplitSummary();
+        } else if (t.closest && t.closest('#weightList')) {
+            updateSplitSummary();
+        } else if (t.id === 'expenseRate') {
+            updateCurrencyRow();
             updateSplitSummary();
         } else if (t.id === 'expenseSearch') {
             renderExpensesList();
@@ -4594,7 +5311,8 @@
     });
 
     document.addEventListener('change', e => {
-        if (e.target.id === 'expenseDate') updateExpenseDateHint();
+        if (e.target.id === 'photoInput') handlePhotoPick(e);
+        if (e.target.id === 'expenseCurrency') { updateCurrencyRow(); updateSplitSummary(); }
         if (e.target.closest && e.target.closest('#splitMembersList')) updateSplitSummary();
         if (e.target.id === 'fileInput') handleFileImport(e);
     });
