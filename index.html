@@ -1760,6 +1760,223 @@
             .receipt-wrap { display: none; }
         }
 
+        /* ============================================================
+           ======  v5 FIXES FOUND BY LOOKING AT THE REAL APP  =========
+           ============================================================ */
+
+        /* The floating + button was sitting on top of the last card on every
+           screen - on the home tab it landed exactly on the empty-state icon,
+           so two plus signs overlapped. Content now clears nav + FAB. */
+        .screen {
+            padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 110px);
+        }
+
+        /* On a desktop-width window the nav items were flung to the far edges
+           of a 1900px bar. Keep the bar full-bleed but the items in a column. */
+        .bottom-nav {
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .bottom-nav-inner {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        @media (min-width: 720px) {
+            .bottom-nav-inner { max-width: 620px; }
+        }
+
+        /* The top bar had the same problem: title on one edge, gear on the other. */
+        .top-bar {
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .top-bar-inner {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: calc(16px + var(--safe-left));
+            padding-right: calc(16px + var(--safe-right));
+        }
+        @media (min-width: 720px) {
+            .top-bar-inner { max-width: 620px; }
+        }
+
+        /* A centre-anchored FAB always lands on the middle of whatever row is
+           behind it - on the reports tab it covered a stat line, and on an empty
+           home screen it stacked on top of the empty-state icon. Corner-anchored
+           is the usual mobile pattern and only ever floats over card padding.
+           A soft scrim underneath keeps it legible over any content. */
+        .fab {
+            right: calc(18px + var(--safe-right));
+            left: auto;
+            transform: none;
+            bottom: calc(var(--nav-height) + var(--safe-bottom) + 14px);
+        }
+        .fab:active { transform: scale(0.9) !important; }
+        /* On a phone there is no gutter to park in, so the button unavoidably
+           floats over the column. Get out of the way while the user reads:
+           slide out on scroll-down, return on scroll-up. Overlap becomes
+           transient instead of permanent. */
+        .fab::before {
+            content: "";
+            position: absolute;
+            inset: -14px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--bg-primary) 40%, transparent 72%);
+            opacity: 0.85;
+            z-index: -1;
+        }
+        /* Once the window is wide enough there is empty gutter beside the
+           content column - park the button there so it stops floating over
+           cards entirely. max() keeps it on-screen when the gutter is thin. */
+        @media (min-width: 720px) {
+            .fab { right: max(18px, calc(50% - 310px - 74px)); }
+        }
+        @media (min-width: 1180px) {
+            .fab { right: max(18px, calc(50% - 490px - 74px)); }
+        }
+
+        /* Inactive nav labels sat at 3.7-4.3:1 against the bar - below the 4.5
+           AA floor. They were the one surface the earlier contrast pass never
+           sampled, because the bar uses --bg-secondary rather than the page
+           background everything else sits on. */
+        /* Two problems here. The label colour was --text-muted on the bar's own
+           lighter background, landing at 3.7-4.3:1 (AA needs 4.5). And carrying
+           "active" purely with the brand teal failed the same test in the light
+           theme, where teal on white is ~2.3:1. Activeness is now carried by
+           weight + the existing indicator bar and icon scale, so the colour is
+           free to be a high-contrast one in every theme. */
+        .bottom-nav .nav-item { color: var(--text-secondary); font-weight: 600; }
+        .bottom-nav .nav-item.active { color: var(--text-primary); font-weight: 800; }
+        .bottom-nav .nav-item.active .icon { transform: scale(1.16); }
+
+        /* A floating button anchored to the viewport sits on top of whatever
+           happens to be behind it, and no amount of padding fixes that at every
+           scroll position. Putting the action in the nav bar removes the overlay
+           entirely - it can never cover a number, at any width or scroll offset. */
+        .fab { display: none !important; }
+
+        .nav-add {
+            flex: 0 0 auto;
+            width: 50px; height: 50px;
+            margin: 0 6px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(140deg, var(--primary-light), var(--primary));
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px -4px var(--primary-glow);
+            transition: transform var(--transition-bounce), box-shadow var(--transition-fast);
+        }
+        .nav-add:active { transform: scale(0.9); }
+        .nav-add .na-plus {
+            font-size: 27px;
+            font-weight: 300;
+            line-height: 1;
+            margin-top: -3px;
+        }
+        .bottom-nav { overflow: visible; }
+        .bottom-nav-inner { overflow: visible; }
+
+        /* Empty-state icons are SVG now, not text glyphs */
+        .empty-state .icon {
+            color: var(--text-muted);
+            background: var(--glass);
+        }
+        .empty-state .icon svg { display: block; }
+
+        /* The date field's ::after was drawing something that read as an empty
+           checkbox. Replaced with a real calendar glyph. */
+        .date-btn::after {
+            content: "";
+            width: 18px; height: 18px;
+            border: none;
+            box-shadow: none;
+            flex-shrink: 0;
+            background-color: currentColor;
+            opacity: 0.55;
+            -webkit-mask: var(--cal-mask) center / contain no-repeat;
+            mask: var(--cal-mask) center / contain no-repeat;
+        }
+        :root {
+            --cal-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E");
+        }
+
+        /* The header gradient was a very saturated cyan that pulled the eye away
+           from the numbers. Deeper, less neon, with the glow toned down. */
+        .trip-header {
+            background: linear-gradient(140deg, var(--primary-light) 0%, var(--primary) 45%, var(--primary-dark) 100%);
+            box-shadow: 0 10px 30px -12px var(--primary-glow);
+        }
+        .trip-name { font-size: 22px; letter-spacing: -0.4px; }
+        .trip-info { gap: 12px; flex-wrap: wrap; align-items: center; }
+        .trip-code-display {
+            font-family: ui-monospace, "Cascadia Mono", Menlo, monospace;
+            letter-spacing: 3px;
+            padding: 3px 12px;
+            background: rgba(0,0,0,0.18);
+            border: 1px solid rgba(255,255,255,0.22);
+        }
+
+        /* At 0% the progress bar was an invisible hairline. Give it a visible
+           track and hide it entirely when there is nothing to show. */
+        .trip-progress { background: rgba(0,0,0,0.22); height: 8px; }
+        .trip-progress span { box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .trip-progress.is-empty { display: none; }
+        .trip-progress-label.is-empty { opacity: 0.75; margin-top: 10px; }
+
+        /* Stat tiles: emoji rendered at inconsistent sizes across platforms and
+           dwarfed the values. Icons are SVG and the number leads. */
+        .stat-card { padding: 15px 12px; text-align: center; }
+        .stat-icon {
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            width: 34px; height: 34px;
+            border-radius: 11px;
+            background: var(--glass);
+            margin-bottom: 8px;
+            font-size: 0;
+            color: var(--text-secondary);
+        }
+        .stat-card.success .stat-icon { color: var(--success); }
+        .stat-card.danger  .stat-icon { color: var(--danger); }
+        .stat-card.warning .stat-icon { color: var(--warning); }
+        .stat-card.info    .stat-icon { color: var(--info); }
+        .stat-value { font-size: 19px; line-height: 1.3; }
+        .stat-label { font-size: 11.5px; line-height: 1.5; }
+
+        /* Category tiles read better with the label doing the work */
+        .category-option { padding: 12px 6px; gap: 5px; }
+        .category-option .icon { font-size: 21px; }
+        .category-option .label { font-size: 11.5px; }
+
+        /* Wide screens: two columns instead of one narrow ribbon of cards */
+        @media (min-width: 1180px) {
+            .container { max-width: 980px; }
+            #homeScreen .container,
+            #membersScreen .container,
+            #reportsScreen .container { display: block; }
+            .grid-2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                align-items: start;
+            }
+            .grid-2 > .card { margin-bottom: 0; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+
 
 
         /* ===== PRINT REPORT (FIX #8: replaces jsPDF, renders Persian natively) ===== */
@@ -1815,6 +2032,7 @@
 
     <!-- Top Bar -->
     <header class="top-bar">
+      <div class="top-bar-inner">
         <div class="top-bar-right">
             <button class="back-btn" id="backBtn" data-act="goBack" title="بازگشت" aria-label="بازگشت">→</button>
             <span class="top-bar-title">🏖️ سفرینو</span>
@@ -1823,6 +2041,7 @@
             <button class="btn btn-ghost btn-icon" id="importExportBtn" data-act="modal" data-arg="importExportModal" style="display:none;" title="ورود/خروج داده" aria-label="ورود و خروج داده">📦</button>
             <button class="btn btn-ghost btn-icon" data-act="toggleSettings" title="تنظیمات" aria-label="تنظیمات">⚙️</button>
         </div>
+      </div>
     </header>
 
     <!-- Settings Panel -->
@@ -1839,7 +2058,7 @@
         </div>
         <div class="settings-section">
             <div class="settings-label">ℹ️ نسخه</div>
-            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v4.0 — محمد عباسی</div>
+            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v4.1 — محمد عباسی</div>
         </div>
     </div>
 
@@ -1907,22 +2126,22 @@
 
             <div class="stats-grid">
                 <div class="stat-card success">
-                    <span class="stat-icon">💰</span>
+                    <span class="stat-icon" data-icon="money"></span>
                     <div class="stat-value" id="totalExpenses">۰</div>
                     <div class="stat-label">کل هزینه‌ها</div>
                 </div>
                 <div class="stat-card info">
-                    <span class="stat-icon">👤</span>
+                    <span class="stat-icon" data-icon="person"></span>
                     <div class="stat-value" id="perPersonAvg">۰</div>
                     <div class="stat-label">میانگین سهم هر نفر</div>
                 </div>
                 <div class="stat-card warning">
-                    <span class="stat-icon">🧾</span>
+                    <span class="stat-icon" data-icon="receipt"></span>
                     <div class="stat-value" id="expenseCount">۰</div>
                     <div class="stat-label">تعداد هزینه</div>
                 </div>
                 <div class="stat-card" id="myBalanceCard">
-                    <span class="stat-icon">⚖️</span>
+                    <span class="stat-icon" data-icon="scale"></span>
                     <div class="stat-value" id="myBalance">۰</div>
                     <div class="stat-label" id="myBalanceLabel">وضعیت من</div>
                 </div>
@@ -1978,19 +2197,21 @@
                 <div id="membersList"></div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">💸 تسویه حساب</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">💸 تسویه حساب</h3>
+                    </div>
+                    <div id="settlementList"></div>
                 </div>
-                <div id="settlementList"></div>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">🧾 پرداخت‌های ثبت‌شده</h3>
-                    <span class="card-badge" id="paymentsBadge">۰</span>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🧾 پرداخت‌های ثبت‌شده</h3>
+                        <span class="card-badge" id="paymentsBadge">۰</span>
+                    </div>
+                    <div id="paymentsList"></div>
                 </div>
-                <div id="paymentsList"></div>
             </div>
         </div>
     </div>
@@ -2005,18 +2226,20 @@
                 <div class="chart-container" id="chartContainer"></div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">📈 آمار کلی</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📈 آمار کلی</h3>
+                    </div>
+                    <div id="reportStats"></div>
                 </div>
-                <div id="reportStats"></div>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">🏆 بیشترین پرداخت</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🏆 بیشترین پرداخت</h3>
+                    </div>
+                    <div id="topSpenders"></div>
                 </div>
-                <div id="topSpenders"></div>
             </div>
 
             <button class="btn btn-primary btn-lg" style="width: 100%; margin-top: 16px;" data-act="print">
@@ -2033,11 +2256,15 @@
 
     <!-- Bottom Nav -->
     <nav class="bottom-nav" id="bottomNav">
+      <div class="bottom-nav-inner">
         <button class="nav-item active" data-tab="home" data-act="tab" data-arg="home">
             <span class="icon">🏠</span><span>خانه</span>
         </button>
         <button class="nav-item" data-tab="expenses" data-act="tab" data-arg="expenses">
             <span class="icon">🧾</span><span>هزینه‌ها</span>
+        </button>
+        <button class="nav-add" id="navAddBtn" style="display:none;" data-act="newExpense" title="هزینه جدید" aria-label="ثبت هزینه جدید">
+            <span class="na-plus" aria-hidden="true">+</span>
         </button>
         <button class="nav-item" data-tab="members" data-act="tab" data-arg="members">
             <span class="icon">👥</span><span>اعضا</span>
@@ -2045,6 +2272,7 @@
         <button class="nav-item" data-tab="reports" data-act="tab" data-arg="reports">
             <span class="icon">📊</span><span>گزارش</span>
         </button>
+      </div>
     </nav>
 
     <!-- ========== MODALS ========== -->
@@ -2442,7 +2670,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '4.0.0';
+    const APP_VERSION    = '4.1.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -3367,6 +3595,36 @@
         return false;
     }
 
+
+    // ========== INLINE ICON SET ==========
+    // Placeholder characters (%, *, -, +) were standing in for real icons in the
+    // empty states, which read as broken rather than intentional. These are
+    // stroke icons that inherit currentColor and scale with the box.
+    function svgIcon(paths, size) {
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+               'stroke-linecap="round" stroke-linejoin="round" width="' + (size || 28) + '" height="' +
+               (size || 28) + '" aria-hidden="true">' + paths + '</svg>';
+    }
+    const ICONS = {
+        receipt:  '<path d="M4 3v18l2.5-1.5L9 21l2.5-1.5L14 21l2.5-1.5L19 21V3l-2.5 1.5L14 3l-2.5 1.5L9 3 6.5 4.5z"/><path d="M8 8h8M8 12h6"/>',
+        chart:    '<path d="M3 3v18h18"/><path d="M7 15l3.5-4 3 3L20 7"/>',
+        wallet:   '<path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M16 12h2"/><path d="M3 9h18"/>',
+        users:    '<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5"/><path d="M18 20a5.5 5.5 0 0 0-3-4.9"/>',
+        check:    '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+        scale:    '<path d="M12 4v16"/><path d="M6 8h12"/><path d="M6 8l-3 6a3 3 0 0 0 6 0z"/><path d="M18 8l-3 6a3 3 0 0 0 6 0z"/>',
+        person:   '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+        money:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M14.5 9.5c-.5-.9-1.5-1.3-2.5-1.3-1.4 0-2.5.8-2.5 2s1.1 1.8 2.5 2 2.5.7 2.5 2-1.1 2-2.5 2c-1.1 0-2-.4-2.5-1.3"/>',
+        calendar: '<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/>',
+        search:   '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+        plus:     '<path d="M12 5v14M5 12h14"/>',
+        camera:   '<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>'
+    };
+    function emptyState(iconKey, title, desc) {
+        return '<div class="empty-state"><span class="icon">' + svgIcon(ICONS[iconKey] || ICONS.receipt, 30) + '</span>' +
+               (title ? '<div class="title">' + esc(title) + '</div>' : '') +
+               (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') + '</div>';
+    }
+
     // ========== SMALL DOM HELPERS ==========
     const $ = id => document.getElementById(id);
     function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
@@ -3516,6 +3774,7 @@
         $('homeScreen').classList.add('active');
         $('bottomNav').style.display = 'flex';
         $('fabBtn').style.display = 'flex';
+        if ($('navAddBtn')) $('navAddBtn').style.display = 'flex';
         $('backBtn').classList.add('visible');
         $('importExportBtn').style.display = '';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -3534,6 +3793,7 @@
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         $('welcomeScreen').classList.add('active');
         $('bottomNav').style.display = 'none';
+        if ($('navAddBtn')) $('navAddBtn').style.display = 'none';
         $('fabBtn').style.display = 'none';
         $('backBtn').classList.remove('visible');
         $('importExportBtn').style.display = 'none';
@@ -4603,12 +4863,17 @@
         const settled = (currentTrip.payments || []).reduce((sum, p) => sum + p.amount, 0);
         const totalDebt = outstanding + settled;
 
+        const track = bar.parentElement;
         if (!currentTrip.expenses.length) {
             bar.style.width = '0%';
+            track.classList.add('is-empty');
+            text.parentElement.classList.add('is-empty');
             text.textContent = 'هنوز هزینه‌ای ثبت نشده';
             pctEl.textContent = '';
             return;
         }
+        track.classList.remove('is-empty');
+        text.parentElement.classList.remove('is-empty');
         if (totalDebt === 0) {
             bar.style.width = '100%';
             text.textContent = 'همه حساب‌ها صاف است';
@@ -4647,7 +4912,7 @@
                    formatSigned(bal) + '</span></div>' +
                    '<div class="balance-bar"><span class="' + (bal >= 0 ? 'pos' : 'neg') +
                    '" style="width:' + pct + '%"></span></div></div>';
-        }).join('') : '<div class="empty-state"><div class="desc">عضوی نیست</div></div>');
+        }).join('') : emptyState('users', '', 'عضوی نیست'));
     }
 
     function expenseItemHTML(exp) {
@@ -4694,9 +4959,7 @@
             .slice(0, 3);
         setHTML('recentExpensesList', recent.length
             ? recent.map(expenseItemHTML).join('')
-            : '<div class="empty-state"><span class="icon">+</span>' +
-              '<div class="title">هنوز هزینه‌ای ثبت نشده</div>' +
-              '<div class="desc">اولین هزینه سفر را ثبت کنید</div></div>');
+            : emptyState('receipt', 'هنوز هزینه‌ای ثبت نشده', 'با دکمه + اولین هزینه را اضافه کنید'));
     }
 
     function renderExpensesList() {
@@ -4716,8 +4979,9 @@
         }
         setHTML('expensesList', list.length
             ? groupedExpensesHTML(list)
-            : '<div class="empty-state"><span class="icon">-</span><div class="title">' +
-              ((q || filterCategory !== 'all') ? 'نتیجه‌ای یافت نشد' : 'هنوز هزینه‌ای ثبت نشده') + '</div></div>');
+            : ((q || filterCategory !== 'all')
+                ? emptyState('search', 'نتیجه‌ای یافت نشد', 'فیلتر یا عبارت جستجو را تغییر دهید')
+                : emptyState('receipt', 'هنوز هزینه‌ای ثبت نشده', 'با دکمه + اولین هزینه را اضافه کنید')));
     }
 
     function renderMembersList() {
@@ -4756,8 +5020,7 @@
                 'data-from="' + esc(s.from.id) + '" data-to="' + esc(s.to.id) + '" data-amount="' + s.amount + '">' +
                 'پرداخت شد</button></div>'
             ).join('')
-            : '<div class="empty-state"><span class="icon">*</span>' +
-              '<div class="title">همه تسویه شده‌اند</div></div>');
+            : emptyState('check', 'همه تسویه شده‌اند', 'هیچ بدهی باقی نمانده'));
     }
 
     function renderPayments() {
@@ -4772,9 +5035,9 @@
                        '<div class="pay-date">' + esc(formatDateTime(p.createdAt)) + '</div></div>' +
                        '<span class="pay-amount">' + formatNumber(p.amount) + ' ' + cur + '</span>' +
                        '<button class="payment-del" data-act="delPayment" data-arg="' + esc(p.id) +
-                       '" title="حذف پرداخت" aria-label="حذف پرداخت">x</button></div>';
+                       '" title="حذف پرداخت" aria-label="حذف پرداخت">&times;</button></div>';
             }).join('')
-            : '<div class="empty-state"><div class="desc">هنوز پرداختی ثبت نشده</div></div>');
+            : emptyState('wallet', '', 'وقتی کسی بدهی‌اش را بدهد، اینجا ثبت می‌شود'));
     }
 
     function renderReportStats() {
@@ -4815,7 +5078,7 @@
                 '<span class="spender-name">' + esc(s.m.name) + '</span>' +
                 '<span class="spender-amount">' + formatNumber(s.paid) + '</span></div>'
             ).join('')
-            : '<div class="empty-state"><div class="desc">هنوز پرداختی ثبت نشده</div></div>');
+            : emptyState('money', '', 'هنوز پرداختی ثبت نشده'));
     }
 
     // ========== SVG DONUT CHART (FIX #10: no Chart.js, works offline) ==========
@@ -4834,8 +5097,7 @@
         const total = slices.reduce((s, c) => s + totals[c.id], 0);
 
         if (!total) {
-            box.innerHTML = '<div class="empty-state"><span class="icon">%</span>' +
-                            '<div class="desc">داده‌ای برای نمودار وجود ندارد</div></div>';
+            box.innerHTML = emptyState('chart', '', 'با ثبت اولین هزینه، نمودار اینجا ساخته می‌شود');
             return;
         }
 
@@ -5354,6 +5616,9 @@
         renderAvatarGrid('newMemberAvatarGrid', 'member');
         renderAvatarGrid('editMemberAvatarGrid', 'editMember');
         renderFilterChips();
+        document.querySelectorAll('[data-icon]').forEach(el => {
+            el.innerHTML = svgIcon(ICONS[el.dataset.icon] || ICONS.receipt, 20);
+        });
 
         // Reopen the most recent trip, but only if we can identify the visitor.
         const recent = readJSON(K_RECENT, []);
