@@ -1,0 +1,4238 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <!-- FIX #23: zoom re-enabled (was maximum-scale=1.0,user-scalable=no) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D9488">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="سفرینو">
+    <meta name="description" content="مدیریت هوشمند هزینه‌های سفر گروهی">
+    <title>سفرینو - مدیریت هزینه سفر</title>
+
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+
+    <!-- FIX #9: real manifest file (was a data: URL with a "chort_name" typo and empty icons) -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- FIX #10: Chart.js and jsPDF removed entirely. Charts are inline SVG and the
+         PDF report uses the browser's own print engine, so the app has zero external
+         JS dependencies and works fully offline. The webfont below is the only remote
+         asset and is purely cosmetic - the fallback stack renders fine without it. -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0D9488;
+            --primary-light: #14B8A6;
+            --primary-dark: #0F766E;
+            --primary-glow: rgba(13, 148, 136, 0.3);
+            --secondary: #F97316;
+            --success: #10B981;
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --danger: #EF4444;
+            --danger-bg: rgba(239, 68, 68, 0.12);
+            --warning: #F59E0B;
+            --warning-bg: rgba(245, 158, 11, 0.12);
+            --info: #3B82F6;
+            --info-bg: rgba(59, 130, 246, 0.12);
+            
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-tertiary: #334155;
+            --bg-hover: #3B4C63;
+            
+            --text-primary: #F8FAFC;
+            --text-secondary: #CBD5E1;
+            --text-muted: #64748B;
+            
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-hover: rgba(255, 255, 255, 0.12);
+            
+            --radius: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --radius-full: 50px;
+            
+            --shadow: 0 4px 24px rgba(0,0,0,0.25);
+            --shadow-lg: 0 12px 48px rgba(0,0,0,0.4);
+            --shadow-glow: 0 0 30px var(--primary-glow);
+            
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            
+            --nav-height: 72px;
+            --topbar-height: 56px;
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        [data-theme="day"] {
+            --bg-primary: #F0F4F8;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #E8EDF2;
+            --bg-hover: #DCE3EA;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --glass: rgba(0, 0, 0, 0.03);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-hover: rgba(0, 0, 0, 0.06);
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 48px rgba(0,0,0,0.12);
+        }
+
+        [data-theme="sunset"] {
+            --primary: #F97316;
+            --primary-light: #FB923C;
+            --primary-dark: #EA580C;
+            --primary-glow: rgba(249, 115, 22, 0.3);
+            --bg-primary: #1C1917;
+            --bg-secondary: #292524;
+            --bg-tertiary: #44403C;
+            --bg-hover: #57534E;
+        }
+
+        [data-theme="ocean"] {
+            --primary: #0EA5E9;
+            --primary-light: #38BDF8;
+            --primary-dark: #0284C7;
+            --primary-glow: rgba(14, 165, 233, 0.3);
+            --bg-primary: #0C1929;
+            --bg-secondary: #152238;
+            --bg-tertiary: #1E3A5F;
+            --bg-hover: #264B73;
+        }
+
+        [data-theme="forest"] {
+            --primary: #22C55E;
+            --primary-light: #4ADE80;
+            --primary-dark: #16A34A;
+            --primary-glow: rgba(34, 197, 94, 0.3);
+            --bg-primary: #0A1F10;
+            --bg-secondary: #14301C;
+            --bg-tertiary: #1E4028;
+            --bg-hover: #285234;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.4s, visibility 0.4s;
+        }
+
+        .loading-overlay.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            font-size: 56px;
+            margin-bottom: 20px;
+            animation: loadPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
+        }
+
+        .loading-bar {
+            width: 120px;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .loading-bar::after {
+            content: '';
+            display: block;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            border-radius: 4px;
+            animation: loadBar 1.2s ease-in-out infinite;
+        }
+
+        @keyframes loadBar {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
+        }
+
+        .screen.active {
+            display: block;
+            animation: screenIn 0.35s ease-out;
+        }
+
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-left: calc(16px + var(--safe-left));
+            padding-right: calc(16px + var(--safe-right));
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            top: calc(12px + var(--safe-top));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: calc(100% - 32px);
+            max-width: 400px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .toast.success { background: linear-gradient(135deg, #059669, #10B981); color: white; border: none; }
+        .toast.error { background: linear-gradient(135deg, #DC2626, #EF4444); color: white; border: none; }
+        .toast.warning { background: linear-gradient(135deg, #D97706, #F59E0B); color: white; border: none; }
+        .toast.info { background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; border: none; }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: calc(var(--topbar-height) + var(--safe-top));
+            padding-top: var(--safe-top);
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: calc(16px + var(--safe-left));
+            padding-right: calc(16px + var(--safe-right));
+            z-index: 100;
+            transition: background var(--transition-fast);
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .top-bar-title {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.3px;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .back-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass);
+            border: none;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-left: 8px;
+        }
+
+        .back-btn:active { transform: scale(0.92); }
+        .back-btn.visible { display: flex; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: white;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .btn:active::after { opacity: 0.1; }
+        .btn:active { transform: scale(0.96); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-success { background: linear-gradient(135deg, #34D399, #10B981); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #F87171, #EF4444); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #78350F; }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            padding: 8px;
+        }
+
+        .btn-ghost:hover { color: var(--text-primary); background: var(--glass); }
+
+        .btn-lg { padding: 16px 28px; font-size: 16px; }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn-icon { width: 42px; height: 42px; padding: 0; border-radius: 12px; }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: border-color var(--transition-fast);
+        }
+
+        .card:hover { border-color: rgba(255,255,255,0.15); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-badge {
+            background: var(--primary);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 12px;
+            border-radius: var(--radius-full);
+            min-width: 28px;
+            text-align: center;
+        }
+
+        /* ===== FORMS ===== */
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .form-label .required { color: var(--danger); font-size: 12px; }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .form-input::placeholder { color: var(--text-muted); }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            background-size: 20px;
+            padding-left: 40px;
+            cursor: pointer;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .form-error {
+            font-size: 12px;
+            color: var(--danger);
+            margin-top: 6px;
+            display: none;
+        }
+
+        .form-input.error { border-color: var(--danger); }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 18px 16px;
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+
+        .stat-card:active { transform: scale(0.97); }
+
+        .stat-icon { font-size: 26px; margin-bottom: 8px; display: block; }
+        .stat-value { font-size: 19px; font-weight: 900; letter-spacing: -0.5px; }
+        .stat-unit { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+        .stat-card.success { border-color: rgba(16, 185, 129, 0.3); background: var(--success-bg); }
+        .stat-card.success .stat-value { color: var(--success); }
+        .stat-card.danger { border-color: rgba(239, 68, 68, 0.3); background: var(--danger-bg); }
+        .stat-card.danger .stat-value { color: var(--danger); }
+        .stat-card.warning { border-color: rgba(245, 158, 11, 0.3); background: var(--warning-bg); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.info { border-color: rgba(59, 130, 246, 0.3); background: var(--info-bg); }
+        .stat-card.info .stat-value { color: var(--info); }
+
+        /* ===== LIST ITEMS ===== */
+        .expense-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+
+        .expense-item:hover { border-color: var(--glass-border); }
+        .expense-item:active { transform: scale(0.98); }
+
+        .expense-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            background: var(--glass);
+            flex-shrink: 0;
+        }
+
+        .expense-info { flex: 1; min-width: 0; }
+        .expense-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .expense-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+        .expense-right { text-align: left; flex-shrink: 0; }
+        .expense-amount { font-weight: 800; font-size: 14px; color: var(--primary); }
+        .expense-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 52px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+            display: block;
+        }
+
+        .empty-state .title { font-size: 15px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+        .empty-state .desc { font-size: 13px; }
+
+        /* ===== AVATAR GRID ===== */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .avatar-option {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all var(--transition-bounce);
+        }
+
+        .avatar-option:active { transform: scale(0.88); }
+        .avatar-option.selected {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+            transform: scale(1.08);
+        }
+
+        /* ===== CATEGORY GRID ===== */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .category-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 8px;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .category-option:active { transform: scale(0.95); }
+        .category-option.selected {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+        }
+
+        .category-option .icon { font-size: 24px; }
+        .category-option .label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+
+        /* ===== TRIP HEADER ===== */
+        .trip-header {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary), var(--primary-dark));
+            border-radius: var(--radius-xl);
+            padding: 28px 24px;
+            margin-bottom: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px var(--primary-glow);
+        }
+
+        .trip-header::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+            border-radius: 50%;
+        }
+
+        .trip-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+            border-radius: 50%;
+        }
+
+        .trip-name { font-size: 24px; font-weight: 900; margin-bottom: 10px; position: relative; z-index: 1; }
+        .trip-info { display: flex; gap: 16px; font-size: 13px; opacity: 0.9; margin-bottom: 18px; position: relative; z-index: 1; font-weight: 500; }
+        .trip-code-display { font-family: monospace; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 8px; font-size: 12px; letter-spacing: 2px; }
+
+        .trip-actions {
+            display: flex;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .trip-actions .btn {
+            flex: 1;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 13px;
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+
+        .trip-actions .btn:active { background: rgba(255,255,255,0.3); }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: modalBgIn 0.25s ease;
+        }
+
+        @keyframes modalBgIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            width: 100%;
+            max-width: 520px;
+            max-height: calc(92vh - var(--safe-top));
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--text-muted);
+            border-radius: 4px;
+            margin: 10px auto 0;
+            opacity: 0.4;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .modal-title { font-size: 17px; font-weight: 800; }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass);
+            border: none;
+            border-radius: 50%;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover { background: var(--danger); color: white; }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            padding-bottom: calc(16px + var(--safe-bottom));
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .modal-center .modal-content {
+            border-radius: var(--radius-xl);
+            max-width: 380px;
+            margin: auto;
+            max-height: 80vh;
+        }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: none;
+            justify-content: space-around;
+            padding: 6px 0;
+            padding-bottom: calc(6px + var(--safe-bottom));
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 8px 18px;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+            position: relative;
+            border-radius: 14px;
+        }
+
+        .nav-item .icon { font-size: 22px; transition: transform var(--transition-bounce); }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active .icon { transform: scale(1.15); }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 0 0 3px 3px;
+        }
+
+        /* ===== FAB ===== */
+        .fab {
+            position: fixed;
+            bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 6px 24px var(--primary-glow), 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
+            transition: all var(--transition-bounce);
+        }
+
+        .fab:active { transform: translateX(-50%) scale(0.9); }
+
+        /* ===== SETTLEMENT ===== */
+        .settlement-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            border: 1px solid transparent;
+            transition: all var(--transition-fast);
+        }
+
+        .settlement-item.paid {
+            opacity: 0.5;
+            border-color: var(--success);
+        }
+
+        .settlement-person { text-align: center; min-width: 56px; }
+        .settlement-person .avatar { font-size: 28px; }
+        .settlement-person .name { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+        .settlement-arrow { flex: 1; text-align: center; }
+        .settlement-arrow .amount { font-size: 15px; font-weight: 900; color: var(--primary); }
+        .settlement-arrow .arrow-icon { font-size: 18px; color: var(--text-muted); margin: 4px 0; }
+        .settlement-actions { display: flex; flex-direction: column; gap: 6px; }
+
+        /* ===== CHECKBOX ===== */
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .checkbox-item:active { transform: scale(0.98); }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        /* ===== SPLIT TOGGLE ===== */
+        .split-toggle {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-full);
+            padding: 4px;
+            margin-bottom: 14px;
+        }
+
+        .split-toggle-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .split-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }
+
+        /* ===== CUSTOM SPLIT ===== */
+        .custom-split-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+        }
+
+        .custom-split-item .info { flex: 1; display: flex; align-items: center; gap: 8px; }
+        .custom-split-item .avatar { font-size: 20px; }
+        .custom-split-item .name { font-size: 14px; font-weight: 600; }
+        .custom-split-item input {
+            width: 100px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            text-align: center;
+            transition: border-color var(--transition-fast);
+        }
+
+        .custom-split-item input:focus { outline: none; border-color: var(--primary); }
+        .custom-split-total { text-align: center; padding: 10px; font-size: 13px; font-weight: 700; border-radius: var(--radius); margin-top: 8px; }
+        .custom-split-total.match { color: var(--success); background: var(--success-bg); }
+        .custom-split-total.mismatch { color: var(--danger); background: var(--danger-bg); }
+
+        /* ===== RECENT TRIPS ===== */
+        .recent-trip-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .recent-trip-item:hover { border-color: var(--primary); }
+        .recent-trip-item:active { transform: scale(0.98); }
+
+        .recent-trip-icon { font-size: 36px; }
+        .recent-trip-info { flex: 1; }
+        .recent-trip-name { font-weight: 700; font-size: 15px; }
+        .recent-trip-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .recent-trip-delete {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--danger-bg);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .recent-trip-delete:active { transform: scale(0.9); }
+
+        /* ===== MEMBER ITEM ===== */
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+
+        .member-item:active { transform: scale(0.98); }
+        .member-item.inactive { opacity: 0.45; }
+
+        .member-avatar { font-size: 36px; flex-shrink: 0; }
+        .member-info { flex: 1; min-width: 0; }
+        .member-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .member-balance { font-size: 13px; margin-top: 2px; }
+        .member-balance.positive { color: var(--success); }
+        .member-balance.negative { color: var(--danger); }
+        .admin-badge { font-size: 14px; }
+        .inactive-badge { font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 1px 8px; border-radius: 6px; font-weight: 700; }
+
+        /* ===== BALANCE ITEM ===== */
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .balance-item:last-child { border-bottom: none; }
+
+        .balance-info { display: flex; align-items: center; gap: 8px; }
+        .balance-avatar { font-size: 20px; }
+        .balance-name { font-size: 14px; font-weight: 600; }
+        .balance-amount { font-weight: 800; font-size: 14px; }
+        .balance-amount.positive { color: var(--success); }
+        .balance-amount.negative { color: var(--danger); }
+
+        /* ===== REPORT ===== */
+        .report-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 14px;
+        }
+
+        .report-stat-row:last-child { border-bottom: none; }
+        .report-stat-row strong { color: var(--primary); }
+
+        .top-spender-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+        }
+
+        .top-spender-item .rank { font-size: 22px; }
+        .top-spender-item .spender-avatar { font-size: 26px; }
+        .top-spender-item .spender-name { flex: 1; font-size: 14px; font-weight: 600; }
+        .top-spender-item .spender-amount { font-weight: 800; font-size: 14px; color: var(--primary); }
+
+        /* ===== CHART ===== */
+        .chart-container { position: relative; height: 260px; }
+
+        /* ===== EXPENSE DETAIL ===== */
+        .expense-detail-info {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .split-members-list {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            padding: 12px;
+        }
+
+        .split-member-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .split-member-item:last-child { border-bottom: none; }
+
+        /* ===== DIVIDER ===== */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
+        /* ===== SETTINGS ===== */
+        .settings-panel {
+            position: fixed;
+            top: calc(var(--topbar-height) + var(--safe-top) + 8px);
+            right: calc(16px + var(--safe-right));
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            min-width: 240px;
+            box-shadow: var(--shadow-lg);
+            z-index: 99;
+            display: none;
+        }
+
+        .settings-panel.show { display: block; animation: screenIn 0.2s ease; }
+
+        .settings-section { margin-bottom: 16px; }
+        .settings-section:last-child { margin-bottom: 0; }
+        .settings-label { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; font-weight: 700; }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .theme-option {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: var(--glass);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all var(--transition-bounce);
+        }
+
+        .theme-option:active { transform: scale(0.88); }
+        .theme-option.active { border-color: var(--primary); background: var(--primary-glow); }
+
+        /* ===== SEARCH ===== */
+        .search-bar {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 16px;
+            padding-right: 44px;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .search-bar input:focus { outline: none; border-color: var(--primary); }
+        .search-bar input::placeholder { color: var(--text-muted); }
+
+        .search-bar .search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-muted);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer-credit {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .footer-credit strong { color: var(--primary); }
+
+        /* ===== UTILITIES ===== */
+        .btn-group { display: flex; gap: 8px; }
+        .btn-group .btn { flex: 1; }
+        .text-center { text-align: center; }
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: flex !important; }
+
+        /* ===== FILTER CHIPS ===== */
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-chips::-webkit-scrollbar { display: none; }
+
+        .filter-chip {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid transparent;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition-fast);
+        }
+
+        .filter-chip.active {
+            background: var(--primary-glow);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ===== IMPORT/EXPORT ===== */
+        .import-export-section { margin-top: 12px; }
+        .import-export-section .btn { width: 100%; margin-bottom: 8px; }
+
+        /* ===== ANIMATIONS ===== */
+        .stagger-1 { animation-delay: 0.05s; }
+        .stagger-2 { animation-delay: 0.1s; }
+        .stagger-3 { animation-delay: 0.15s; }
+        .stagger-4 { animation-delay: 0.2s; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .top-bar, .bottom-nav, .fab, .modal { display: none !important; }
+            .screen { padding-bottom: 0; }
+        }
+
+        /* ============================================================
+           ===============  ADDITIONS / FIXES (v3)  ===================
+           ============================================================ */
+
+        /* FIX #10: font stack that degrades gracefully when the CDN webfont
+           is unavailable, so an offline launch still looks correct. */
+        body {
+            font-family: "Vazirmatn", "Segoe UI", Tahoma, "Iranian Sans",
+                         system-ui, -apple-system, sans-serif;
+        }
+
+        /* FIX #20: admin-gated controls. Still CSS for layout, but every
+           mutating action is now also checked in JS (requireAdmin). */
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: flex !important; }
+
+        /* ===== TOAST ACTION (FIX #16: undo is now reachable) ===== */
+        .toast { justify-content: space-between; }
+        .toast-action {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background var(--transition-fast);
+        }
+        .toast-action:active { background: rgba(255,255,255,0.4); }
+        .toast-msg { flex: 1; min-width: 0; }
+
+        /* ===== SVG DONUT CHART (FIX #10: replaces Chart.js) ===== */
+        .chart-container {
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+        .donut-wrap { position: relative; width: 180px; height: 180px; flex-shrink: 0; }
+        .donut-wrap svg { width: 100%; height: 100%; display: block; }
+        .donut-seg { transition: opacity var(--transition-fast); }
+        .donut-seg:hover { opacity: 0.75; }
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            text-align: center;
+        }
+        .donut-center .dc-value { font-size: 17px; font-weight: 900; color: var(--text-primary); }
+        .donut-center .dc-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .chart-legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px 14px;
+            width: 100%;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+        .legend-name { color: var(--text-secondary); font-weight: 600; }
+        .legend-val { margin-right: auto; color: var(--text-muted); font-weight: 700; font-size: 11px; }
+
+        /* ===== IDENTITY PICKER (FIX #6: no more silent admin takeover) ===== */
+        .pick-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--text-primary);
+            text-align: right;
+            transition: all var(--transition-fast);
+        }
+        .pick-item:hover { border-color: var(--primary); }
+        .pick-item:active { transform: scale(0.98); }
+        .pick-item .pk-avatar { font-size: 30px; }
+        .pick-item .pk-name { font-weight: 700; font-size: 15px; flex: 1; }
+        .pick-item .pk-tag { font-size: 11px; color: var(--text-muted); }
+
+        /* ===== PAYMENTS LEDGER (FIX #3: settlements are now real entries) ===== */
+        .payment-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--success-bg);
+            border: 1px solid rgba(16,185,129,0.25);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .payment-item .pay-text { flex: 1; font-weight: 600; }
+        .payment-item .pay-amount { font-weight: 800; color: var(--success); }
+        .payment-item .pay-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .payment-del {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--glass); border: none; border-radius: 9px;
+            cursor: pointer; font-size: 14px; flex-shrink: 0;
+        }
+        .payment-del:active { transform: scale(0.9); }
+
+        /* ===== INTEGRITY / INFO BANNERS ===== */
+        .banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 13px 15px;
+            border-radius: var(--radius);
+            font-size: 12.5px;
+            line-height: 1.75;
+            margin-bottom: 14px;
+        }
+        .banner.warn { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+        .banner.info { background: var(--info-bg); color: var(--info); border: 1px solid rgba(59,130,246,0.3); }
+        .banner .bn-icon { font-size: 16px; flex-shrink: 0; }
+        .banner strong { font-weight: 800; }
+
+        /* ===== SPLIT SUMMARY LINE IN EXPENSE FORM ===== */
+        .split-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 6px 0 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .split-quick { display: flex; gap: 6px; margin-bottom: 10px; }
+        .split-quick .btn { flex: 1; font-size: 12px; padding: 7px 10px; }
+
+        :focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+
+        /* ===== PRINT REPORT (FIX #8: replaces jsPDF, renders Persian natively) ===== */
+        #printArea { display: none; }
+
+        @media print {
+            @page { size: A4; margin: 14mm; }
+            html, body {
+                background: #fff !important;
+                color: #000 !important;
+                min-height: 0 !important;
+            }
+            .top-bar, .bottom-nav, .fab, .modal, .settings-panel,
+            .toast-container, .loading-overlay, .screen, .footer-credit { display: none !important; }
+
+            #printArea {
+                display: block !important;
+                font-family: "Vazirmatn", Tahoma, sans-serif;
+                color: #000;
+                direction: rtl;
+            }
+            #printArea .pr-head { text-align: center; border-bottom: 2px solid #0D9488; padding-bottom: 10px; margin-bottom: 16px; }
+            #printArea .pr-title { font-size: 22px; font-weight: 900; color: #0D9488; margin-bottom: 4px; }
+            #printArea .pr-trip { font-size: 16px; font-weight: 700; }
+            #printArea .pr-meta { font-size: 11px; color: #555; margin-top: 4px; }
+            #printArea h2 {
+                font-size: 14px; font-weight: 800; margin: 16px 0 8px;
+                padding-bottom: 4px; border-bottom: 1px solid #ccc;
+                page-break-after: avoid;
+            }
+            #printArea table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            #printArea th, #printArea td { border: 1px solid #ccc; padding: 5px 7px; text-align: right; }
+            #printArea th { background: #f0f4f8; font-weight: 800; }
+            #printArea tr { page-break-inside: avoid; }
+            #printArea .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+            #printArea .pos { color: #047857; font-weight: 700; }
+            #printArea .neg { color: #B91C1C; font-weight: 700; }
+            #printArea .pr-foot { margin-top: 20px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ccc; padding-top: 8px; }
+            #printArea .pr-empty { font-size: 11px; color: #666; padding: 6px 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-logo">🏖️</div>
+        <div class="loading-bar"></div>
+        <div class="loading-text">در حال بارگذاری...</div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-bar-right">
+            <button class="back-btn" id="backBtn" data-act="goBack" title="بازگشت" aria-label="بازگشت">→</button>
+            <span class="top-bar-title">🏖️ سفرینو</span>
+        </div>
+        <div class="top-bar-actions">
+            <button class="btn btn-ghost btn-icon" id="importExportBtn" data-act="modal" data-arg="importExportModal" style="display:none;" title="ورود/خروج داده" aria-label="ورود و خروج داده">📦</button>
+            <button class="btn btn-ghost btn-icon" data-act="toggleSettings" title="تنظیمات" aria-label="تنظیمات">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-section">
+            <div class="settings-label">🎨 تم</div>
+            <div class="theme-options">
+                <button class="theme-option active" data-theme="night" data-act="theme" data-arg="night" title="شب">🌙</button>
+                <button class="theme-option" data-theme="day" data-act="theme" data-arg="day" title="روز">☀️</button>
+                <button class="theme-option" data-theme="sunset" data-act="theme" data-arg="sunset" title="غروب">🌅</button>
+                <button class="theme-option" data-theme="ocean" data-act="theme" data-arg="ocean" title="اقیانوس">🌊</button>
+                <button class="theme-option" data-theme="forest" data-act="theme" data-arg="forest" title="جنگل">🌲</button>
+            </div>
+        </div>
+        <div class="settings-section">
+            <div class="settings-label">ℹ️ نسخه</div>
+            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v3.0 — محمد عباسی</div>
+        </div>
+    </div>
+
+    <!-- ========== WELCOME SCREEN ========== -->
+    <div id="welcomeScreen" class="screen active">
+        <div class="container" style="padding-top: calc(80px + var(--safe-top)); text-align: center;">
+            <div style="font-size: 80px; margin-bottom: 16px; animation: loadPulse 2s ease-in-out infinite;">🏖️</div>
+            <h1 style="font-size: 34px; font-weight: 900; margin-bottom: 6px; letter-spacing: -0.5px;">سفرینو</h1>
+            <p style="color: var(--text-muted); margin-bottom: 32px; font-size: 15px;">مدیریت هوشمند هزینه‌های سفر گروهی</p>
+
+            <div style="margin-bottom: 24px;">
+                <button class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 12px;" data-act="modal" data-arg="createTripModal">
+                    ✨ ایجاد سفر جدید
+                </button>
+                <button class="btn btn-outline btn-lg" style="width: 100%; margin-bottom: 12px;" data-act="modal" data-arg="joinTripModal">
+                    🔗 پیوستن به سفر
+                </button>
+                <button class="btn btn-secondary btn-lg" style="width: 100%;" data-act="importFile">
+                    📥 بارگذاری فایل سفر
+                </button>
+            </div>
+
+            <div id="recentTrips" style="display: none;">
+                <div class="divider">سفرهای اخیر</div>
+                <div id="recentTripsList"></div>
+            </div>
+
+            <div class="footer-credit">
+                <p>طراحی و توسعه با ❤️</p>
+                <p><strong>محمد عباسی</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== HOME SCREEN ========== -->
+    <div id="homeScreen" class="screen">
+        <div class="container" style="padding-top: calc(70px + var(--safe-top));">
+            <div class="trip-header">
+                <h1 class="trip-name" id="tripNameDisplay">سفر</h1>
+                <div class="trip-info">
+                    <span>👥 <span id="memberCountDisplay">۰</span> نفر</span>
+                    <span>📅 <span id="tripDateDisplay">-</span></span>
+                    <span class="trip-code-display" id="tripCodeSmall"></span>
+                </div>
+                <div class="trip-actions">
+                    <button class="btn" data-act="share">📤 اشتراک</button>
+                    <button class="btn" data-act="export">💾 خروجی</button>
+                    <button class="btn admin-only" data-act="modal" data-arg="editTripModal">✏️ ویرایش</button>
+                </div>
+            </div>
+
+            <div id="integrityBanner"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <span class="stat-icon">💰</span>
+                    <div class="stat-value" id="totalExpenses">۰</div>
+                    <div class="stat-label">کل هزینه‌ها</div>
+                </div>
+                <div class="stat-card info">
+                    <span class="stat-icon">👤</span>
+                    <div class="stat-value" id="perPersonAvg">۰</div>
+                    <div class="stat-label">میانگین سهم هر نفر</div>
+                </div>
+                <div class="stat-card warning">
+                    <span class="stat-icon">🧾</span>
+                    <div class="stat-value" id="expenseCount">۰</div>
+                    <div class="stat-label">تعداد هزینه</div>
+                </div>
+                <div class="stat-card" id="myBalanceCard">
+                    <span class="stat-icon">⚖️</span>
+                    <div class="stat-value" id="myBalance">۰</div>
+                    <div class="stat-label" id="myBalanceLabel">وضعیت من</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 وضعیت اعضا</h3>
+                </div>
+                <div id="quickBalanceList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🕐 آخرین هزینه‌ها</h3>
+                    <button class="btn btn-sm btn-outline" data-act="tab" data-arg="expenses">همه</button>
+                </div>
+                <div id="recentExpensesList"></div>
+            </div>
+
+            <div class="footer-credit">
+                <p>طراحی: <strong>محمد عباسی</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== EXPENSES SCREEN ========== -->
+    <div id="expensesScreen" class="screen">
+        <div class="container" style="padding-top: calc(70px + var(--safe-top));">
+            <div class="search-bar">
+                <input type="text" id="expenseSearch" placeholder="جستجوی هزینه..." aria-label="جستجوی هزینه">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div class="filter-chips" id="filterChips"></div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🧾 لیست هزینه‌ها</h3>
+                    <span class="card-badge" id="expensesBadge">۰</span>
+                </div>
+                <div id="expensesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MEMBERS SCREEN ========== -->
+    <div id="membersScreen" class="screen">
+        <div class="container" style="padding-top: calc(70px + var(--safe-top));">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">👥 اعضای سفر</h3>
+                    <button class="btn btn-sm btn-primary admin-only" data-act="modal" data-arg="addMemberModal">+ عضو</button>
+                </div>
+                <div id="membersList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💸 تسویه حساب</h3>
+                </div>
+                <div id="settlementList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🧾 پرداخت‌های ثبت‌شده</h3>
+                    <span class="card-badge" id="paymentsBadge">۰</span>
+                </div>
+                <div id="paymentsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== REPORTS SCREEN ========== -->
+    <div id="reportsScreen" class="screen">
+        <div class="container" style="padding-top: calc(70px + var(--safe-top));">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 نمودار هزینه‌ها</h3>
+                </div>
+                <div class="chart-container" id="chartContainer"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📈 آمار کلی</h3>
+                </div>
+                <div id="reportStats"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🏆 بیشترین پرداخت</h3>
+                </div>
+                <div id="topSpenders"></div>
+            </div>
+
+            <button class="btn btn-primary btn-lg" style="width: 100%; margin-top: 16px;" data-act="print">
+                🖨️ گزارش PDF / چاپ
+            </button>
+            <p class="form-hint" style="text-align:center; margin-top:10px;">
+                در پنجره چاپ، مقصد را روی «ذخیره به‌صورت PDF» بگذارید.
+            </p>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="fabBtn" data-act="newExpense" title="هزینه جدید" aria-label="هزینه جدید">➕</button>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" data-tab="home" data-act="tab" data-arg="home">
+            <span class="icon">🏠</span><span>خانه</span>
+        </button>
+        <button class="nav-item" data-tab="expenses" data-act="tab" data-arg="expenses">
+            <span class="icon">🧾</span><span>هزینه‌ها</span>
+        </button>
+        <button class="nav-item" data-tab="members" data-act="tab" data-arg="members">
+            <span class="icon">👥</span><span>اعضا</span>
+        </button>
+        <button class="nav-item" data-tab="reports" data-act="tab" data-arg="reports">
+            <span class="icon">📊</span><span>گزارش</span>
+        </button>
+    </nav>
+
+    <!-- ========== MODALS ========== -->
+
+    <!-- Create Trip -->
+    <div id="createTripModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">✨ ایجاد سفر جدید</h3>
+                <button class="modal-close" data-act="close" data-arg="createTripModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="newTripName">🏷️ نام سفر <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="newTripName" placeholder="مثلاً: سفر شمال" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newTripDate">📅 تاریخ</label>
+                    <input type="text" class="form-input" id="newTripDate" placeholder="مثلاً: ۱۵ دی ۱۴۰۳" maxlength="40">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newTripCurrency">💲 واحد پول</label>
+                    <select class="form-input form-select" id="newTripCurrency">
+                        <option value="تومان">تومان</option>
+                        <option value="ریال">ریال</option>
+                        <option value="دلار">دلار</option>
+                        <option value="یورو">یورو</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="adminName">👤 نام شما <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="adminName" placeholder="نام شما" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">😊 آواتار</label>
+                    <div class="avatar-grid" id="adminAvatarGrid" data-avatar-grid="create"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="createTrip">🚀 ایجاد سفر</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Trip -->
+    <div id="joinTripModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">🔗 پیوستن به سفر</h3>
+                <button class="modal-close" data-act="close" data-arg="joinTripModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="banner info">
+                    <span class="bn-icon">ℹ️</span>
+                    <span>کد سفر فقط روی <strong>همین دستگاه</strong> کار می‌کند، چون سفرینو داده‌ها را محلی نگه می‌دارد و سروری ندارد. برای انتقال سفر به دستگاه دیگر، از <strong>خروجی فایل JSON</strong> استفاده کنید.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="joinTripCode">🔑 کد سفر <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="joinTripCode" placeholder="کد ۶ رقمی" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:800;" maxlength="6" autocapitalize="characters">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="joinMemberName">👤 نام شما <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="joinMemberName" placeholder="نام شما" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">😊 آواتار</label>
+                    <div class="avatar-grid" id="joinAvatarGrid" data-avatar-grid="join"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="joinTrip">🎉 پیوستن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Trip -->
+    <div id="editTripModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ ویرایش سفر</h3>
+                <button class="modal-close" data-act="close" data-arg="editTripModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="editTripName">🏷️ نام سفر</label>
+                    <input type="text" class="form-input" id="editTripName" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editTripDate">📅 تاریخ</label>
+                    <input type="text" class="form-input" id="editTripDate" maxlength="40">
+                </div>
+                <div class="divider">⚠️ منطقه خطر</div>
+                <button class="btn btn-danger" style="width: 100%;" data-act="confirmDeleteTrip">🗑️ حذف کامل سفر</button>
+                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" data-act="leaveTrip">🚪 خروج از سفر (داده حفظ می‌شود)</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="saveTrip">💾 ذخیره</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Expense Modal (FIX #1: add and edit share ONE form incl. split editing) -->
+    <div id="expenseModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title" id="expenseModalTitle">➕ هزینه جدید</h3>
+                <button class="modal-close" data-act="close" data-arg="expenseModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="expenseEditId">
+                <div class="form-group">
+                    <label class="form-label" for="expenseTitle">📝 عنوان <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="expenseTitle" placeholder="مثلاً: ناهار رستوران" maxlength="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="expenseAmount">💵 مبلغ <span class="required">*</span>
+                        <span id="currencyLabel" style="font-weight:400; color: var(--text-muted); font-size:12px;">(تومان)</span>
+                    </label>
+                    <input type="text" class="form-input" id="expenseAmount" placeholder="۰" inputmode="numeric" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">🏷️ دسته‌بندی</label>
+                    <div class="category-grid" id="categoryGrid" data-category-grid="1"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="expensePayer">💳 پرداخت‌کننده</label>
+                    <select class="form-input form-select" id="expensePayer"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">👥 تقسیم بین</label>
+                    <div class="split-toggle">
+                        <button type="button" class="split-toggle-btn active" data-split="equal" data-act="splitType" data-arg="equal">مساوی</button>
+                        <button type="button" class="split-toggle-btn" data-split="custom" data-act="splitType" data-arg="custom">سفارشی</button>
+                    </div>
+                    <div id="splitEqualSection">
+                        <div class="split-quick">
+                            <button type="button" class="btn btn-outline btn-sm" data-act="splitAll">همه</button>
+                            <button type="button" class="btn btn-outline btn-sm" data-act="splitNone">هیچ‌کس</button>
+                        </div>
+                        <div id="splitMembersList"></div>
+                        <div class="split-hint" id="splitEqualHint"></div>
+                    </div>
+                    <div id="splitCustomSection" style="display: none;">
+                        <div class="split-quick">
+                            <button type="button" class="btn btn-outline btn-sm" data-act="splitDistribute">تقسیم خودکار</button>
+                            <button type="button" class="btn btn-outline btn-sm" data-act="splitClear">پاک کردن</button>
+                        </div>
+                        <div id="customSplitList"></div>
+                        <div class="custom-split-total" id="customSplitTotal"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="saveExpense" id="expenseSaveBtn">ثبت هزینه</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Detail -->
+    <div id="expenseDetailModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">📋 جزئیات هزینه</h3>
+                <button class="modal-close" data-act="close" data-arg="expenseDetailModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body" id="expenseDetailContent"></div>
+            <div class="modal-footer admin-only">
+                <div class="btn-group">
+                    <button class="btn btn-outline" data-act="editExpense">✏️ ویرایش</button>
+                    <button class="btn btn-danger" data-act="deleteExpense">🗑️ حذف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Member -->
+    <div id="addMemberModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">👤 افزودن عضو</h3>
+                <button class="modal-close" data-act="close" data-arg="addMemberModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="newMemberName">👤 نام عضو <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="newMemberName" placeholder="نام عضو جدید" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">😊 آواتار</label>
+                    <div class="avatar-grid" id="newMemberAvatarGrid" data-avatar-grid="member"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="addMember">افزودن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Detail -->
+    <div id="memberDetailModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">👤 جزئیات عضو</h3>
+                <button class="modal-close" data-act="close" data-arg="memberDetailModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body" id="memberDetailContent"></div>
+            <div class="modal-footer admin-only">
+                <div class="btn-group">
+                    <button class="btn btn-outline" data-act="editMember">✏️ ویرایش</button>
+                    <button class="btn btn-warning" id="toggleMemberBtn" data-act="toggleMember">غیرفعال</button>
+                    <button class="btn btn-danger" data-act="removeMember">🗑️ حذف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Member -->
+    <div id="editMemberModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ ویرایش عضو</h3>
+                <button class="modal-close" data-act="close" data-arg="editMemberModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editMemberId">
+                <div class="form-group">
+                    <label class="form-label" for="editMemberName">👤 نام</label>
+                    <input type="text" class="form-input" id="editMemberName" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">😊 آواتار</label>
+                    <div class="avatar-grid" id="editMemberAvatarGrid" data-avatar-grid="editMember"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="updateMember">💾 ذخیره</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Identity Picker (FIX #6) -->
+    <div id="identityModal" class="modal modal-center" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">👋 شما کدام عضو هستید؟</h3>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                    برای اینکه «وضعیت من» درست محاسبه شود، عضو خودتان را انتخاب کنید.
+                </p>
+                <div id="identityList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share -->
+    <div id="shareModal" class="modal modal-center" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📤 کد سفر</h3>
+                <button class="modal-close" data-act="close" data-arg="shareModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: var(--primary); margin-bottom: 18px; font-family: monospace;" id="shareCodeDisplay"></div>
+                <div class="banner info" style="text-align: right;">
+                    <span class="bn-icon">ℹ️</span>
+                    <span>این کد فقط روی <strong>همین دستگاه/مرورگر</strong> سفر را باز می‌کند. برای فرستادن سفر به دوستان یا دستگاه دیگر، از دکمه زیر فایل بگیرید و آن را بفرستید.</span>
+                </div>
+                <div class="btn-group" style="margin-top: 14px;">
+                    <button class="btn btn-secondary" data-act="copyCode">📋 کپی کد</button>
+                    <button class="btn btn-primary" data-act="export">💾 فایل سفر</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import / Export -->
+    <div id="importExportModal" class="modal modal-center" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📦 ورود/خروج داده</h3>
+                <button class="modal-close" data-act="close" data-arg="importExportModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                    داده‌های سفر را به صورت فایل JSON ذخیره یا بارگذاری کنید. این تنها راه انتقال سفر بین دستگاه‌ها و گرفتن پشتیبان است.
+                </p>
+                <button class="btn btn-success btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="export">📤 خروجی JSON</button>
+                <button class="btn btn-outline btn-lg" style="width: 100%;" data-act="importFile">📥 بارگذاری JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm -->
+    <div id="confirmModal" class="modal modal-center" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="confirmTitle">⚠️ تأیید</h3>
+                <button class="modal-close" data-act="close" data-arg="confirmModal" aria-label="بستن">×</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p id="confirmMessage" style="color: var(--text-secondary); font-size: 14px; line-height: 1.9;"></p>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-group">
+                    <button class="btn btn-outline" data-act="close" data-arg="confirmModal">انصراف</button>
+                    <button class="btn btn-danger" id="confirmBtn" data-act="confirmYes">تأیید</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable report target (FIX #8) -->
+    <div id="printArea" aria-hidden="true"></div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="fileInput" accept=".json,application/json" style="display:none;">
+    <script>
+    'use strict';
+
+    /* =====================================================================
+       سفرینو v3.0 - Trip expense manager
+       Rewritten to fix the issues found in the v2 audit. Each fix is tagged
+       with the finding number it addresses.
+       ===================================================================== */
+
+    // ========== CONSTANTS ==========
+    const AVATARS = ['😀','😎','🤩','😊','🥳','😇','🤠','🧑‍💼','👨‍🎨','👩‍🚀','🧙‍♂️','🦸‍♀️','🧑‍🔬','🧑‍🎤','🐱','🦊','🐸','🐼'];
+    const AVATAR_SET = new Set(AVATARS);
+    const DEFAULT_AVATAR = AVATARS[0];
+
+    const CATEGORIES = [
+        { id: 'food',      name: 'غذا',      icon: '🍕', color: '#FF6B6B' },
+        { id: 'transport', name: 'حمل‌ونقل', icon: '🚗', color: '#4ECDC4' },
+        { id: 'stay',      name: 'اقامت',    icon: '🏨', color: '#45B7D1' },
+        { id: 'shopping',  name: 'خرید',     icon: '🛍️', color: '#96CEB4' },
+        { id: 'fun',       name: 'تفریح',    icon: '🎢', color: '#FFC65C' },
+        { id: 'other',     name: 'سایر',     icon: '📦', color: '#DDA0DD' }
+    ];
+    const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
+
+    const APP_VERSION    = '3.0.0';
+    const SCHEMA_VERSION = 3;
+
+    // FIX #13: an explicit ceiling keeps every amount inside the safe integer
+    // range, so totals can never silently drift into floating point.
+    const MAX_AMOUNT   = 999999999999;
+    const MAX_MEMBERS  = 100;
+    const MAX_EXPENSES = 5000;
+
+    const K_TRIP   = 'safarino_trip_';
+    const K_RECENT = 'safarino_recent';
+    const K_USER   = 'safarino_user';
+    const K_THEME  = 'safarino_theme';
+    const K_DEVICE = 'safarino_device';
+
+    // ========== STATE ==========
+    let currentTrip = null;
+    let currentUser = null;
+    let splitType = 'equal';
+    let currentExpenseId = null;
+    let currentMemberId = null;
+    let filterCategory = 'all';
+    let confirmAction = null;
+    let selectedCategory = 'food';
+
+    // FIX #19: avatar selection is per-form instead of one shared global that
+    // leaked the last picked emoji into every other form.
+    const formAvatars = { create: DEFAULT_AVATAR, join: DEFAULT_AVATAR, member: DEFAULT_AVATAR, editMember: DEFAULT_AVATAR };
+
+    // FIX #16: undo is a real stack of restore closures surfaced in the toast.
+    const undoStack = [];
+
+    // FIX #24: ledger memo, cleared by touch() on every mutation.
+    let _ledger = null;
+
+    // ========== ESCAPING (FIX #2) ==========
+    const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    function esc(str) {
+        return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ESC_MAP[ch]);
+    }
+    // Avatars are user data too (a crafted JSON import can carry markup), so they
+    // are whitelisted against the known set and then escaped like any other text.
+    function escAvatar(a) {
+        const v = String(a == null ? '' : a);
+        return esc(AVATAR_SET.has(v) ? v : DEFAULT_AVATAR);
+    }
+
+    // ========== IDS ==========
+    const ID_RE = /^[A-Za-z0-9_-]{1,32}$/;
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+    function safeId(id) {
+        return (typeof id === 'string' && ID_RE.test(id)) ? id : generateId();
+    }
+
+    const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const CODE_RE = /^[A-Z0-9]{4,12}$/;
+    function randomCode() {
+        let code = '';
+        for (let i = 0; i < 6; i++) code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+        return code;
+    }
+    // FIX #11: never hand back a code that is already taken - the old version
+    // could silently overwrite an existing trip.
+    function generateTripCode() {
+        for (let i = 0; i < 200; i++) {
+            const c = randomCode();
+            if (!localStorage.getItem(K_TRIP + c)) return c;
+        }
+        return randomCode() + Date.now().toString(36).slice(-2).toUpperCase();
+    }
+
+    // ========== NUMBERS (FIX #13) ==========
+    // All digit ranges use \u escapes so the source stays pure ASCII and cannot
+    // be corrupted by tooling/encoding round-trips.
+    const FA_ZERO = 0x06F0;                      // Persian-Indic zero
+    const AR_ZERO = 0x0660;                      // Arabic-Indic zero
+    const RE_FA        = /[۰-۹]/g;
+    const RE_AR        = /[٠-٩]/g;
+    const RE_ANY_DIGIT = /[0-9۰-۹٠-٩]/;
+    const RE_ANY_DIGIT_G = /[0-9۰-۹٠-٩]/g;
+    // spaces, ASCII/Arabic comma, Persian thousands mark, bidi controls, NBSP
+    const RE_SEPARATORS = /[\s,_،٬⁦-⁩‎‏ ]/g;
+    // Persian decimal separator and the slash Iranians often type for decimals
+    const RE_DECIMAL_MARK = /[٫\/]/g;
+
+    const FA_DIGITS = Array.from({ length: 10 }, (_, i) => String.fromCharCode(FA_ZERO + i));
+
+    function toPersian(num) {
+        return String(num).replace(/[0-9]/g, d => FA_DIGITS[+d]);
+    }
+    function normalizeDigits(str) {
+        return String(str)
+            .replace(RE_FA, d => String(d.charCodeAt(0) - FA_ZERO))
+            .replace(RE_AR, d => String(d.charCodeAt(0) - AR_ZERO));
+    }
+
+    /**
+     * Parse a user-typed amount into an integer.
+     * Handles Persian and Arabic-Indic digits, thousands separators, Persian
+     * decimal marks, and clamps out-of-range values. Returns null when unusable.
+     */
+    function parseAmount(str) {
+        if (str == null) return null;
+        let s = normalizeDigits(String(str)).trim();
+        const negative = /^-/.test(s);
+        s = s.replace(RE_SEPARATORS, '');
+        s = s.replace(RE_DECIMAL_MARK, '.');
+        s = s.replace(/[^0-9.]/g, '');
+        if (!s || s === '.') return null;
+        const parts = s.split('.');
+        const joined = parts.length > 1 ? parts[0] + '.' + parts.slice(1).join('') : parts[0];
+        let n = Number(joined);
+        if (!Number.isFinite(n)) return null;
+        n = Math.round(negative ? -n : n);
+        if (n >  MAX_AMOUNT) n =  MAX_AMOUNT;
+        if (n < -MAX_AMOUNT) n = -MAX_AMOUNT;
+        return n;
+    }
+    function parsePositiveAmount(str) {
+        const n = parseAmount(str);
+        return (n == null || n <= 0) ? null : n;
+    }
+    function toInt(v) {
+        const n = (typeof v === 'number' && Number.isFinite(v)) ? v : parseAmount(v);
+        if (n == null || !Number.isFinite(n)) return 0;
+        return Math.min(MAX_AMOUNT, Math.max(-MAX_AMOUNT, Math.round(n)));
+    }
+
+    function formatNumber(num) {
+        const n = Number(num);
+        if (!Number.isFinite(n)) return toPersian(0);
+        return toPersian(Math.abs(Math.round(n)).toLocaleString('en-US'));
+    }
+    function formatSigned(num) {
+        const n = Math.round(Number(num) || 0);
+        return (n >= 0 ? '+' : '-') + formatNumber(n);
+    }
+    function countDigits(s) {
+        return (String(s).match(RE_ANY_DIGIT_G) || []).length;
+    }
+    function isDigitChar(ch) {
+        return RE_ANY_DIGIT.test(ch);
+    }
+
+    function formatDate(ts) {
+        if (!ts) return '';
+        try { return toPersian(new Date(ts).toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' })); }
+        catch (e) { return ''; }
+    }
+    function formatTime(ts) {
+        if (!ts) return '';
+        try { return toPersian(new Date(ts).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })); }
+        catch (e) { return ''; }
+    }
+    function formatDateTime(ts) {
+        const d = formatDate(ts), t = formatTime(ts);
+        return (d && t) ? (d + ' - ' + t) : (d || t);
+    }
+
+    // ========== DEVICE IDENTITY (FIX #5) ==========
+    // A per-browser id lets us recognise the same person on return visits
+    // instead of matching members by display name.
+    function getDeviceId() {
+        let d = null;
+        try { d = localStorage.getItem(K_DEVICE); } catch (e) {}
+        if (!d || !ID_RE.test(d)) {
+            d = generateId();
+            try { localStorage.setItem(K_DEVICE, d); } catch (e) {}
+        }
+        return d;
+    }
+
+    // ========== STORAGE (FIX #14) ==========
+    // Every write is guarded; a full quota used to throw and silently drop edits.
+    function storageSet(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (e) {
+            const quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+            showToast(
+                quota ? 'حافظه مرورگر پر است. یک سفر قدیمی را حذف یا خروجی بگیرید.'
+                      : 'ذخیره‌سازی ممکن نشد. تغییرات اخیر ذخیره نشد.',
+                'error', 7000
+            );
+            return false;
+        }
+    }
+
+    function readJSON(key, fallback) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            const v = JSON.parse(raw);
+            return v == null ? fallback : v;
+        } catch (e) { return fallback; }
+    }
+
+    function saveToStorage() {
+        if (!currentTrip) return true;
+        currentTrip.lastModified = Date.now();
+        currentTrip.appVersion = APP_VERSION;
+        currentTrip.schemaVersion = SCHEMA_VERSION;
+
+        const ok = storageSet(K_TRIP + currentTrip.code, JSON.stringify(currentTrip));
+        if (!ok) return false;
+
+        let recent = readJSON(K_RECENT, []);
+        if (!Array.isArray(recent)) recent = [];
+        const info = {
+            code: currentTrip.code,
+            name: currentTrip.name,
+            date: currentTrip.date,
+            memberCount: getActiveMembers().length,
+            lastAccess: Date.now()
+        };
+        const idx = recent.findIndex(t => t && t.code === currentTrip.code);
+        if (idx >= 0) recent[idx] = info; else recent.unshift(info);
+        storageSet(K_RECENT, JSON.stringify(recent.slice(0, 10)));
+
+        if (currentUser) storageSet(K_USER, JSON.stringify({ id: currentUser.id, name: currentUser.name }));
+        return true;
+    }
+
+    function loadFromStorage(code) {
+        if (typeof code !== 'string' || !CODE_RE.test(code)) return null;
+        const raw = readJSON(K_TRIP + code, null);
+        if (!raw) return null;
+        const result = sanitizeTrip(raw);
+        return result ? result.trip : null;
+    }
+
+    // ========== SANITIZE + MIGRATE (FIX #15, #21, #22, #2) ==========
+    /**
+     * Turn arbitrary (possibly hostile or corrupt) JSON into a trip object that
+     * every downstream function can trust:
+     *  - ids are re-generated unless they match a strict safe pattern
+     *  - avatars must be one of the known emoji
+     *  - amounts become clamped integers
+     *  - unknown categories fall back to "other"
+     *  - expenses referencing a missing payer get a placeholder member so the
+     *    books still balance instead of leaking money
+     *  - custom splits are reconciled to equal the expense total
+     * Returns { trip, issues } or null when the input is unusable.
+     */
+    function sanitizeTrip(raw) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+        const issues = [];
+
+        const str = (v, max, dflt) => {
+            if (typeof v !== 'string') return dflt;
+            const s = v.trim().slice(0, max);
+            return s.length ? s : dflt;
+        };
+
+        const code = (typeof raw.code === 'string' && CODE_RE.test(raw.code.trim().toUpperCase()))
+            ? raw.code.trim().toUpperCase()
+            : generateTripCode();
+        const name = str(raw.name, 60, 'سفر بدون نام');
+        const date = str(raw.date, 40, 'بدون تاریخ');
+        const currency = str(raw.currency, 12, 'تومان');
+
+        if (!Array.isArray(raw.members) || raw.members.length === 0) return null;
+
+        const rawMembers = raw.members.slice(0, MAX_MEMBERS);
+        const members = [];
+        const usedIds = new Set();
+        const idMap = new Map();
+
+        rawMembers.forEach(m => {
+            if (!m || typeof m !== 'object') { issues.push('یک عضو نامعتبر نادیده گرفته شد.'); return; }
+            let id = safeId(m.id);
+            while (usedIds.has(id)) id = generateId();
+            usedIds.add(id);
+            idMap.set(String(m.id), id);
+            members.push({
+                id: id,
+                name: str(m.name, 40, 'بدون نام'),
+                avatar: AVATAR_SET.has(m.avatar) ? m.avatar : DEFAULT_AVATAR,
+                active: m.active !== false,
+                deviceId: (typeof m.deviceId === 'string' && ID_RE.test(m.deviceId)) ? m.deviceId : null,
+                joinedAt: Number.isFinite(m.joinedAt) ? m.joinedAt : Date.now()
+            });
+        });
+        if (!members.length) return null;
+
+        const memberIds = new Set(members.map(m => m.id));
+        const mapId = old => idMap.get(String(old)) || null;
+        const adminId = mapId(raw.adminId) || members[0].id;
+
+        let ghost = null;
+        const getGhost = () => {
+            if (!ghost) {
+                ghost = { id: generateId(), name: 'عضو حذف‌شده', avatar: DEFAULT_AVATAR,
+                          active: false, deviceId: null, joinedAt: Date.now() };
+                members.push(ghost);
+                memberIds.add(ghost.id);
+                issues.push('بعضی هزینه‌ها پرداخت‌کننده نامشخص داشتند و به یک عضو جایگزین نسبت داده شدند.');
+            }
+            return ghost;
+        };
+
+        const expenses = [];
+        const usedExpIds = new Set();
+        const rawExpenses = Array.isArray(raw.expenses) ? raw.expenses.slice(0, MAX_EXPENSES) : [];
+        if (!Array.isArray(raw.expenses)) issues.push('فهرست هزینه‌ها نامعتبر بود و خالی در نظر گرفته شد.');
+
+        rawExpenses.forEach(e => {
+            if (!e || typeof e !== 'object') { issues.push('یک هزینه نامعتبر نادیده گرفته شد.'); return; }
+            const amount = toInt(e.amount);
+            if (amount <= 0) { issues.push('هزینه‌ای با مبلغ نامعتبر حذف شد.'); return; }
+
+            let id = safeId(e.id);
+            while (usedExpIds.has(id)) id = generateId();
+            usedExpIds.add(id);
+
+            let payerId = mapId(e.payerId);
+            if (!payerId || !memberIds.has(payerId)) payerId = getGhost().id;
+
+            let split = Array.isArray(e.splitBetween)
+                ? e.splitBetween.map(mapId).filter(x => x && memberIds.has(x))
+                : [];
+            split = Array.from(new Set(split));
+            if (!split.length) {
+                split = [payerId];
+                issues.push('هزینه‌ای بدون شریک معتبر بود و کامل به پرداخت‌کننده نسبت داده شد.');
+            }
+
+            let customAmounts = null;
+            if (e.splitType === 'custom') {
+                customAmounts = {};
+                let sum = 0;
+                split.forEach(mid => {
+                    const src = (e.customAmounts && typeof e.customAmounts === 'object') ? e.customAmounts : {};
+                    const v = Math.max(0, toInt(src[String(mid)]));
+                    customAmounts[mid] = v;
+                    sum += v;
+                });
+                if (sum !== amount) {
+                    const fixed = customAmounts[split[0]] + (amount - sum);
+                    if (fixed < 0) {
+                        customAmounts = null;
+                        issues.push('تقسیم سفارشی یک هزینه با مبلغ آن نمی‌خواند و مساوی تقسیم شد.');
+                    } else {
+                        customAmounts[split[0]] = fixed;
+                        issues.push('تقسیم سفارشی یک هزینه اصلاح شد تا با مبلغ آن بخواند.');
+                    }
+                }
+            }
+
+            expenses.push({
+                id: id,
+                title: str(e.title, 80, 'بدون عنوان'),
+                amount: amount,
+                category: CATEGORY_IDS.has(e.category) ? e.category : 'other',
+                payerId: payerId,
+                splitBetween: split,
+                splitType: customAmounts ? 'custom' : 'equal',
+                customAmounts: customAmounts,
+                createdAt: Number.isFinite(e.createdAt) ? e.createdAt : Date.now()
+            });
+        });
+
+        const payments = [];
+        const usedPayIds = new Set();
+        const pushPayment = (from, to, amount, createdAt) => {
+            const f = mapId(from), t = mapId(to);
+            const amt = toInt(amount);
+            if (!f || !t || f === t || !memberIds.has(f) || !memberIds.has(t) || amt <= 0) return;
+            let id = generateId();
+            while (usedPayIds.has(id)) id = generateId();
+            usedPayIds.add(id);
+            payments.push({ id: id, from: f, to: t, amount: amt,
+                            createdAt: Number.isFinite(createdAt) ? createdAt : Date.now() });
+        };
+        if (Array.isArray(raw.payments)) {
+            raw.payments.forEach(p => { if (p && typeof p === 'object') pushPayment(p.from, p.to, p.amount, p.createdAt); });
+        }
+        if (Array.isArray(raw.paidSettlements) && raw.paidSettlements.length) {
+            raw.paidSettlements.forEach(p => { if (p && typeof p === 'object') pushPayment(p.from, p.to, p.amount, p.paidAt || p.createdAt); });
+            issues.push('تسویه‌های نسخه قبلی به پرداخت واقعی تبدیل شدند.');
+        }
+
+        return {
+            trip: {
+                code: code, name: name, date: date, currency: currency, adminId: adminId,
+                members: members, expenses: expenses, payments: payments,
+                createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : Date.now(),
+                lastModified: Date.now(),
+                appVersion: APP_VERSION,
+                schemaVersion: SCHEMA_VERSION
+            },
+            issues: issues
+        };
+    }
+
+    // ========== CALCULATIONS ==========
+    // FIX #24: the ledger is computed once per mutation instead of recomputing
+    // every expense split for every member on every render.
+    function touch() { _ledger = null; }
+
+    function getActiveMembers() {
+        return currentTrip ? currentTrip.members.filter(m => m.active !== false) : [];
+    }
+    function getMember(id) {
+        return currentTrip ? currentTrip.members.find(m => m.id === id) || null : null;
+    }
+    function getCurrency() {
+        return (currentTrip && currentTrip.currency) || 'تومان';
+    }
+    function getCategoryInfo(catId) {
+        return CATEGORIES.find(c => c.id === catId) || CATEGORIES[CATEGORIES.length - 1];
+    }
+
+    /**
+     * Per-member share of one expense.
+     * Equal splits distribute the rounding remainder one unit at a time.
+     * Custom splits are trusted but reconciled, so the shares of an expense
+     * ALWAYS add up to exactly expense.amount - which is what keeps every
+     * balance sheet summing to zero (FIX #1 safety net).
+     */
+    function expenseShares(exp) {
+        const shares = {};
+        const ids = exp.splitBetween || [];
+        const count = ids.length;
+        if (!count) return shares;
+
+        if (exp.splitType === 'custom' && exp.customAmounts) {
+            let sum = 0;
+            ids.forEach(id => {
+                const v = Math.max(0, toInt(exp.customAmounts[id]));
+                shares[id] = v;
+                sum += v;
+            });
+            const drift = exp.amount - sum;
+            if (drift !== 0) shares[ids[0]] = Math.max(0, shares[ids[0]] + drift);
+        } else {
+            const base = Math.floor(exp.amount / count);
+            const remainder = exp.amount - base * count;
+            ids.forEach((id, i) => { shares[id] = base + (i < remainder ? 1 : 0); });
+        }
+        return shares;
+    }
+
+    /**
+     * One pass over expenses + payments producing every member's position.
+     * FIX #3: recorded payments are real ledger entries, so marking a
+     * settlement as paid actually clears the debt instead of just dimming a row.
+     */
+    function computeLedger() {
+        if (_ledger) return _ledger;
+        const map = new Map();
+        const ensure = id => {
+            let e = map.get(id);
+            if (!e) { e = { paid: 0, share: 0, sent: 0, received: 0, balance: 0 }; map.set(id, e); }
+            return e;
+        };
+        if (!currentTrip) { _ledger = map; return map; }
+
+        currentTrip.members.forEach(m => ensure(m.id));
+
+        currentTrip.expenses.forEach(e => {
+            ensure(e.payerId).paid += e.amount;
+            const sh = expenseShares(e);
+            for (const id in sh) ensure(id).share += sh[id];
+        });
+
+        (currentTrip.payments || []).forEach(p => {
+            ensure(p.from).sent += p.amount;
+            ensure(p.to).received += p.amount;
+        });
+
+        map.forEach(v => { v.balance = v.paid - v.share + v.sent - v.received; });
+        _ledger = map;
+        return map;
+    }
+
+    function ledgerOf(id) {
+        return computeLedger().get(id) || { paid: 0, share: 0, sent: 0, received: 0, balance: 0 };
+    }
+    function balanceOf(id) { return ledgerOf(id).balance; }
+    function totalExpenses() {
+        return currentTrip ? currentTrip.expenses.reduce((s, e) => s + e.amount, 0) : 0;
+    }
+
+    /**
+     * Greedy debtor/creditor matching. Operates on the post-payment balances,
+     * so settled debts simply disappear from the list.
+     */
+    function calculateSettlements() {
+        if (!currentTrip) return [];
+        const ledger = computeLedger();
+        const rows = currentTrip.members
+            .map(m => ({ id: m.id, name: m.name, avatar: m.avatar, balance: (ledger.get(m.id) || {}).balance || 0 }))
+            .filter(r => Math.abs(r.balance) >= 1);
+
+        const debtors   = rows.filter(r => r.balance < 0).sort((a, b) => a.balance - b.balance).map(r => Object.assign({}, r));
+        const creditors = rows.filter(r => r.balance > 0).sort((a, b) => b.balance - a.balance).map(r => Object.assign({}, r));
+
+        const settlements = [];
+        let i = 0, j = 0;
+        let guard = 0;
+        while (i < debtors.length && j < creditors.length && guard++ < 10000) {
+            const amount = Math.min(-debtors[i].balance, creditors[j].balance);
+            if (amount >= 1) {
+                settlements.push({
+                    from: { id: debtors[i].id, name: debtors[i].name, avatar: debtors[i].avatar },
+                    to:   { id: creditors[j].id, name: creditors[j].name, avatar: creditors[j].avatar },
+                    amount: Math.round(amount)
+                });
+            }
+            debtors[i].balance += amount;
+            creditors[j].balance -= amount;
+            if (Math.abs(debtors[i].balance) < 1) i++;
+            if (Math.abs(creditors[j].balance) < 1) j++;
+        }
+        return settlements;
+    }
+
+    // FIX #17: the old "per person" tile divided the grand total by the member
+    // count, which ignored who actually took part in each expense. This reports
+    // the true mean of the shares that were really assigned.
+    function averageShare() {
+        const active = getActiveMembers();
+        if (!active.length) return 0;
+        const ledger = computeLedger();
+        const sum = active.reduce((s, m) => s + ((ledger.get(m.id) || {}).share || 0), 0);
+        return Math.round(sum / active.length);
+    }
+
+    function isAdmin() {
+        return !!(currentTrip && currentUser && currentTrip.adminId === currentUser.id);
+    }
+    // FIX #20: CSS hiding is cosmetic; destructive actions check permission here.
+    function requireAdmin() {
+        if (isAdmin()) return true;
+        showToast('فقط مدیر سفر می‌تواند این کار را انجام دهد.', 'error');
+        return false;
+    }
+
+    // ========== SMALL DOM HELPERS ==========
+    const $ = id => document.getElementById(id);
+    function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
+    function setHTML(id, html) { const el = $(id); if (el) el.innerHTML = html; }
+
+    function vibrate(pattern) {
+        try { if (navigator.vibrate) navigator.vibrate(pattern == null ? 10 : pattern); } catch (e) {}
+    }
+
+    // ========== TOAST (with optional action - FIX #16) ==========
+    function showToast(msg, type, duration, action) {
+        vibrate(type === 'error' ? [30, 50, 30] : 10);
+        const container = $('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + (type || 'info');
+
+        const span = document.createElement('span');
+        span.className = 'toast-msg';
+        span.textContent = msg;
+        toast.appendChild(span);
+
+        let timer = null;
+        const dismiss = () => {
+            if (timer) clearTimeout(timer);
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        };
+
+        if (action && typeof action.onClick === 'function') {
+            const btn = document.createElement('button');
+            btn.className = 'toast-action';
+            btn.textContent = action.label;
+            btn.addEventListener('click', () => { dismiss(); action.onClick(); });
+            toast.appendChild(btn);
+        }
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        timer = setTimeout(dismiss, duration || 3000);
+    }
+
+    // ========== UNDO (FIX #16) ==========
+    // v2 pushed onto an undo stack that nothing ever read and no button exposed.
+    function pushUndo(label, restore) {
+        undoStack.push({ label: label, restore: restore });
+        if (undoStack.length > 20) undoStack.shift();
+    }
+    function undoLast() {
+        const entry = undoStack.pop();
+        if (!entry) { showToast('چیزی برای بازگردانی نیست', 'info'); return; }
+        try {
+            entry.restore();
+            touch();
+            saveToStorage();
+            renderAll();
+            showToast(entry.label + ' بازگردانده شد', 'success');
+        } catch (e) {
+            showToast('بازگردانی ممکن نشد', 'error');
+        }
+    }
+    function actionWithUndo(message, label, restore) {
+        pushUndo(label, restore);
+        showToast(message, 'success', 6000, { label: 'بازگردانی', onClick: undoLast });
+    }
+
+    // ========== MODALS ==========
+    let lastFocused = null;
+    function showModal(id) {
+        const modal = $(id);
+        if (!modal) return;
+        lastFocused = document.activeElement;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        vibrate(5);
+        const focusable = modal.querySelector('input, select, button, [tabindex]');
+        if (focusable) setTimeout(() => { try { focusable.focus({ preventScroll: true }); } catch (e) {} }, 60);
+    }
+    function hideModal(id) {
+        const modal = $(id);
+        if (!modal) return;
+        modal.classList.remove('active');
+        if (!document.querySelector('.modal.active')) document.body.style.overflow = '';
+        if (lastFocused && typeof lastFocused.focus === 'function') {
+            try { lastFocused.focus({ preventScroll: true }); } catch (e) {}
+            lastFocused = null;
+        }
+    }
+    function hideAllModals() {
+        document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        document.body.style.overflow = '';
+    }
+
+    function askConfirm(title, message, onYes, yesLabel) {
+        setText('confirmTitle', title);
+        setText('confirmMessage', message);
+        const btn = $('confirmBtn');
+        if (btn) btn.textContent = yesLabel || 'تأیید';
+        confirmAction = onYes;
+        showModal('confirmModal');
+    }
+    function runConfirm() {
+        const fn = confirmAction;
+        confirmAction = null;
+        hideModal('confirmModal');
+        if (typeof fn === 'function') fn();
+    }
+
+    // ========== THEME ==========
+    const THEME_COLORS = { night: '#0F172A', day: '#F0F4F8', sunset: '#1C1917', ocean: '#0C1929', forest: '#0A1F10' };
+    function setTheme(theme) {
+        if (!THEME_COLORS[theme]) theme = 'night';
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem(K_THEME, theme); } catch (e) {}
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === theme);
+        });
+        const panel = $('settingsPanel');
+        if (panel) panel.classList.remove('show');
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = THEME_COLORS[theme];
+    }
+    function toggleSettings() {
+        const p = $('settingsPanel');
+        if (p) p.classList.toggle('show');
+        vibrate(5);
+    }
+
+    // ========== NAVIGATION ==========
+    function switchTab(tab) {
+        const screen = $(tab + 'Screen');
+        if (!screen) return;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        screen.classList.add('active');
+        const nav = document.querySelector('.nav-item[data-tab="' + tab + '"]');
+        if (nav) nav.classList.add('active');
+        if (tab === 'expenses') renderFilterChips();
+        if (tab === 'reports') renderChart();
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        vibrate(5);
+    }
+
+    function showTripScreen() {
+        $('welcomeScreen').classList.remove('active');
+        $('homeScreen').classList.add('active');
+        $('bottomNav').style.display = 'flex';
+        $('fabBtn').style.display = 'flex';
+        $('backBtn').classList.add('visible');
+        $('importExportBtn').style.display = '';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const home = document.querySelector('.nav-item[data-tab="home"]');
+        if (home) home.classList.add('active');
+        updateAdminUI();
+        renderAll();
+    }
+
+    function showWelcomeScreen() {
+        currentTrip = null;
+        currentUser = null;
+        touch();
+        undoStack.length = 0;
+        hideAllModals();
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        $('welcomeScreen').classList.add('active');
+        $('bottomNav').style.display = 'none';
+        $('fabBtn').style.display = 'none';
+        $('backBtn').classList.remove('visible');
+        $('importExportBtn').style.display = 'none';
+        document.body.classList.remove('is-admin');
+        const banner = $('integrityBanner');
+        if (banner) banner.innerHTML = '';
+        loadRecentTrips();
+    }
+
+    function updateAdminUI() {
+        document.body.classList.toggle('is-admin', isAdmin());
+    }
+
+    // ========== IDENTITY (FIX #5, #6) ==========
+    // v2 fell back to members[0] whenever it did not recognise the visitor,
+    // which silently handed admin rights to whoever opened the trip, and it
+    // matched returning members purely by typed name.
+    function resolveIdentity(trip) {
+        const device = getDeviceId();
+        const byDevice = trip.members.find(m => m.deviceId && m.deviceId === device);
+        if (byDevice) return byDevice;
+        const saved = readJSON(K_USER, null);
+        if (saved && saved.id) {
+            const byId = trip.members.find(m => m.id === saved.id);
+            if (byId) return byId;
+        }
+        return null;
+    }
+
+    function openTrip(trip, issues) {
+        currentTrip = trip;
+        touch();
+        const known = resolveIdentity(trip);
+        if (known) {
+            currentUser = known;
+            if (!known.deviceId) known.deviceId = getDeviceId();
+            saveToStorage();
+            showTripScreen();
+            if (issues && issues.length) reportIssues(issues);
+        } else {
+            currentUser = null;
+            showTripScreen();
+            promptIdentity(issues);
+        }
+    }
+
+    function promptIdentity(issues) {
+        const list = $('identityList');
+        if (!list) return;
+        const rows = currentTrip.members.map(m => {
+            const admin = m.id === currentTrip.adminId ? '<span class="pk-tag">مدیر سفر</span>' : '';
+            const off = m.active === false ? '<span class="pk-tag">غیرفعال</span>' : '';
+            return '<button class="pick-item" data-act="pickIdentity" data-arg="' + esc(m.id) + '">' +
+                   '<span class="pk-avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="pk-name">' + esc(m.name) + '</span>' + admin + off + '</button>';
+        }).join('');
+        list.innerHTML = rows +
+            '<button class="pick-item" data-act="pickIdentity" data-arg="__new__">' +
+            '<span class="pk-avatar">+</span><span class="pk-name">من عضو جدیدی هستم</span></button>';
+        showModal('identityModal');
+        if (issues && issues.length) setTimeout(() => reportIssues(issues), 400);
+    }
+
+    function pickIdentity(memberId) {
+        if (memberId === '__new__') {
+            hideModal('identityModal');
+            showModal('addMemberModal');
+            return;
+        }
+        const m = getMember(memberId);
+        if (!m) return;
+        m.deviceId = getDeviceId();
+        if (m.active === false) m.active = true;
+        currentUser = m;
+        saveToStorage();
+        hideModal('identityModal');
+        updateAdminUI();
+        renderAll();
+        showToast('خوش آمدید ' + m.name, 'success');
+    }
+
+    function reportIssues(issues) {
+        if (!issues || !issues.length) return;
+        const unique = Array.from(new Set(issues));
+        const banner = $('integrityBanner');
+        if (banner) {
+            banner.innerHTML = '<div class="banner warn"><span class="bn-icon">!</span><span>' +
+                '<strong>هنگام باز کردن این سفر چند مشکل اصلاح شد:</strong><br>' +
+                unique.map(esc).join('<br>') + '</span></div>';
+        }
+        showToast('داده‌های سفر بازسازی شد. جزئیات در صفحه خانه.', 'warning', 6000);
+    }
+
+    // ========== RECENT TRIPS ==========
+    function loadRecentTrips() {
+        let recent = readJSON(K_RECENT, []);
+        if (!Array.isArray(recent)) recent = [];
+        const container = $('recentTripsList');
+        const wrapper = $('recentTrips');
+        if (!container || !wrapper) return;
+
+        recent = recent.filter(t => t && typeof t.code === 'string' && CODE_RE.test(t.code));
+        if (!recent.length) { wrapper.style.display = 'none'; return; }
+
+        wrapper.style.display = 'block';
+        container.innerHTML = recent.map(trip =>
+            '<div class="recent-trip-item" data-act="openRecent" data-arg="' + esc(trip.code) + '">' +
+                '<div class="recent-trip-icon">*</div>' +
+                '<div class="recent-trip-info">' +
+                    '<div class="recent-trip-name">' + esc(trip.name) + '</div>' +
+                    '<div class="recent-trip-meta">' + toPersian(trip.memberCount || 0) + ' نفر - ' +
+                        esc(trip.date || 'بدون تاریخ') + '</div>' +
+                '</div>' +
+                '<button class="recent-trip-delete" data-act="askRemoveRecent" data-arg="' + esc(trip.code) +
+                    '" title="حذف سفر" aria-label="حذف سفر">x</button>' +
+            '</div>'
+        ).join('');
+    }
+
+    // FIX #7: this used to wipe the trip permanently with no confirmation at all,
+    // behind an icon that looked like "remove from list".
+    function askRemoveRecent(code) {
+        const trip = loadFromStorage(code);
+        const label = trip ? trip.name : code;
+        const count = trip ? trip.expenses.length : 0;
+        askConfirm(
+            'حذف کامل سفر',
+            'سفر "' + label + '" و همه ' + toPersian(count) + ' هزینه آن برای همیشه پاک می‌شود. این کار برگشت‌پذیر نیست.\n' +
+            'اگر فقط می‌خواهید از این فهرست برداشته شود، ابتدا از آن خروجی بگیرید.',
+            () => removeRecentTrip(code),
+            'حذف برای همیشه'
+        );
+    }
+    function removeRecentTrip(code) {
+        let recent = readJSON(K_RECENT, []);
+        if (!Array.isArray(recent)) recent = [];
+        recent = recent.filter(t => t && t.code !== code);
+        storageSet(K_RECENT, JSON.stringify(recent));
+        try { localStorage.removeItem(K_TRIP + code); } catch (e) {}
+        loadRecentTrips();
+        showToast('سفر حذف شد', 'success');
+    }
+
+    function openRecent(code) {
+        const raw = readJSON(K_TRIP + code, null);
+        if (!raw) { showToast('سفر یافت نشد', 'error'); loadRecentTrips(); return; }
+        const result = sanitizeTrip(raw);
+        if (!result) { showToast('داده این سفر خراب است', 'error'); return; }
+        openTrip(result.trip, result.issues);
+    }
+
+    // ========== TRIP MANAGEMENT ==========
+    function createTrip() {
+        const name = $('newTripName').value.trim();
+        const date = $('newTripDate').value.trim();
+        const adminName = $('adminName').value.trim();
+        const currency = $('newTripCurrency').value;
+
+        if (!name || !adminName) { showToast('نام سفر و نام خود را وارد کنید', 'error'); return; }
+
+        const adminId = generateId();
+        const admin = {
+            id: adminId, name: adminName.slice(0, 40),
+            avatar: formAvatars.create, active: true,
+            deviceId: getDeviceId(), joinedAt: Date.now()
+        };
+
+        currentTrip = {
+            code: generateTripCode(),           // FIX #11: guaranteed unused
+            name: name.slice(0, 60),
+            date: date.slice(0, 40) || 'بدون تاریخ',
+            currency: currency,
+            adminId: adminId,
+            members: [admin],
+            expenses: [],
+            payments: [],
+            createdAt: Date.now(),
+            lastModified: Date.now(),
+            appVersion: APP_VERSION,
+            schemaVersion: SCHEMA_VERSION
+        };
+        currentUser = admin;
+        touch();
+
+        if (!saveToStorage()) return;
+        hideModal('createTripModal');
+        showTripScreen();
+        showToast('سفر ایجاد شد', 'success');
+
+        $('newTripName').value = '';
+        $('newTripDate').value = '';
+        $('adminName').value = '';
+        formAvatars.create = DEFAULT_AVATAR;      // FIX #19
+        renderAvatarGrid('adminAvatarGrid', 'create');
+
+        setTimeout(() => {
+            setText('shareCodeDisplay', currentTrip.code);
+            showModal('shareModal');
+        }, 450);
+    }
+
+    // FIX #5: joining no longer silently assumes the identity of anyone who
+    // happens to share your display name.
+    function joinTrip() {
+        const code = $('joinTripCode').value.trim().toUpperCase();
+        const memberName = $('joinMemberName').value.trim();
+        if (!code || !memberName) { showToast('کد سفر و نام خود را وارد کنید', 'error'); return; }
+
+        const raw = readJSON(K_TRIP + code, null);
+        if (!raw) {
+            showToast('سفری با این کد روی این دستگاه نیست. برای انتقال از فایل JSON استفاده کنید.', 'error', 6000);
+            return;
+        }
+        const result = sanitizeTrip(raw);
+        if (!result) { showToast('داده این سفر خراب است', 'error'); return; }
+
+        const trip = result.trip;
+        const device = getDeviceId();
+        const existing = trip.members.find(m => m.name === memberName);
+
+        const proceedAsNew = () => {
+            const member = {
+                id: generateId(), name: memberName.slice(0, 40), avatar: formAvatars.join,
+                active: true, deviceId: device, joinedAt: Date.now()
+            };
+            trip.members.push(member);
+            currentTrip = trip; currentUser = member; touch();
+            saveToStorage();
+            finishJoin(trip, result.issues);
+        };
+        const proceedAsExisting = () => {
+            existing.deviceId = device;
+            if (existing.active === false) existing.active = true;
+            currentTrip = trip; currentUser = existing; touch();
+            saveToStorage();
+            finishJoin(trip, result.issues);
+        };
+
+        if (existing && existing.deviceId && existing.deviceId !== device) {
+            askConfirm('نام تکراری',
+                'عضوی به نام "' + memberName + '" قبلا از دستگاه دیگری به این سفر پیوسته است. اگر خودتان هستید تأیید کنید، وگرنه با نام دیگری وارد شوید.',
+                proceedAsExisting, 'خودم هستم');
+        } else if (existing) {
+            proceedAsExisting();
+        } else {
+            proceedAsNew();
+        }
+    }
+
+    function finishJoin(trip, issues) {
+        hideModal('joinTripModal');
+        showTripScreen();
+        showToast('به "' + trip.name + '" خوش آمدید', 'success');
+        $('joinTripCode').value = '';
+        $('joinMemberName').value = '';
+        formAvatars.join = DEFAULT_AVATAR;
+        renderAvatarGrid('joinAvatarGrid', 'join');
+        if (issues && issues.length) reportIssues(issues);
+    }
+
+    function saveTrip() {
+        if (!currentTrip || !requireAdmin()) return;
+        const name = $('editTripName').value.trim();
+        const date = $('editTripDate').value.trim();
+        if (!name) { showToast('نام سفر نمی‌تواند خالی باشد', 'error'); return; }
+        currentTrip.name = name.slice(0, 60);
+        currentTrip.date = date.slice(0, 40) || 'بدون تاریخ';
+        saveToStorage();
+        hideModal('editTripModal');
+        renderAll();
+        showToast('ذخیره شد', 'success');
+    }
+
+    function confirmDeleteTrip() {
+        if (!currentTrip || !requireAdmin()) return;
+        askConfirm('حذف کامل سفر',
+            'سفر "' + currentTrip.name + '" با همه هزینه‌ها و پرداخت‌ها برای همیشه پاک می‌شود. پیشنهاد می‌کنیم اول خروجی بگیرید.',
+            deleteTrip, 'حذف برای همیشه');
+    }
+    function deleteTrip() {
+        if (!currentTrip) return;
+        const code = currentTrip.code;
+        try { localStorage.removeItem(K_TRIP + code); } catch (e) {}
+        let recent = readJSON(K_RECENT, []);
+        if (!Array.isArray(recent)) recent = [];
+        storageSet(K_RECENT, JSON.stringify(recent.filter(t => t && t.code !== code)));
+        hideAllModals();
+        showWelcomeScreen();
+        showToast('سفر حذف شد', 'success');
+    }
+
+    function leaveTrip() {
+        hideAllModals();
+        showWelcomeScreen();
+    }
+
+    function shareTripCode() {
+        if (!currentTrip) return;
+        setText('shareCodeDisplay', currentTrip.code);
+        showModal('shareModal');
+    }
+    function copyTripCode() {
+        if (!currentTrip) return;
+        const code = currentTrip.code;
+        const done = () => showToast('کد کپی شد', 'success');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code, done));
+        } else {
+            fallbackCopy(code, done);
+        }
+    }
+    function fallbackCopy(text, done) {
+        try {
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.style.position = 'fixed';
+            el.style.opacity = '0';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            done();
+        } catch (e) { showToast('کپی ممکن نشد', 'error'); }
+    }
+
+    // ========== MEMBER MANAGEMENT ==========
+    function addMember() {
+        if (!currentTrip) return;
+        const name = $('newMemberName').value.trim();
+        if (!name) { showToast('نام عضو را وارد کنید', 'error'); return; }
+        if (currentTrip.members.length >= MAX_MEMBERS) { showToast('تعداد اعضا به حداکثر رسیده', 'error'); return; }
+
+        // Adding yourself via the identity picker is open to anyone; adding
+        // other people stays an admin action (FIX #20).
+        const selfJoin = !currentUser;
+        if (!selfJoin && !requireAdmin()) return;
+
+        if (currentTrip.members.some(m => m.name === name && m.active !== false)) {
+            showToast('این نام قبلا ثبت شده', 'error'); return;
+        }
+        const inactive = currentTrip.members.find(m => m.name === name && m.active === false);
+        if (inactive) {
+            inactive.active = true;
+            inactive.avatar = formAvatars.member;
+            if (selfJoin) { inactive.deviceId = getDeviceId(); currentUser = inactive; }
+            touch(); saveToStorage(); hideModal('addMemberModal');
+            $('newMemberName').value = '';
+            updateAdminUI(); renderAll();
+            showToast('عضو دوباره فعال شد', 'success');
+            return;
+        }
+
+        const member = {
+            id: generateId(), name: name.slice(0, 40), avatar: formAvatars.member,
+            active: true, deviceId: selfJoin ? getDeviceId() : null, joinedAt: Date.now()
+        };
+        currentTrip.members.push(member);
+        if (selfJoin) currentUser = member;
+        touch();
+        saveToStorage();
+        hideModal('addMemberModal');
+        $('newMemberName').value = '';
+        formAvatars.member = DEFAULT_AVATAR;
+        renderAvatarGrid('newMemberAvatarGrid', 'member');
+        updateAdminUI();
+        renderAll();
+        showToast('عضو اضافه شد', 'success');
+    }
+
+    function showMemberDetail(memberId) {
+        const member = getMember(memberId);
+        if (!member) return;
+        currentMemberId = memberId;
+
+        const l = ledgerOf(memberId);
+        const cur = esc(getCurrency());
+        const isActive = member.active !== false;
+
+        const toggleBtn = $('toggleMemberBtn');
+        if (toggleBtn) toggleBtn.textContent = isActive ? 'غیرفعال کردن' : 'فعال کردن';
+
+        const adminBadge = member.id === currentTrip.adminId
+            ? '<span class="card-badge" style="background:var(--warning);display:inline-block;">مدیر</span>' : '';
+        const offBadge = !isActive
+            ? '<span class="card-badge" style="background:var(--text-muted);display:inline-block;">غیرفعال</span>' : '';
+
+        const settleRow = (l.sent || l.received)
+            ? '<div class="stats-grid" style="margin-top:12px;">' +
+              '<div class="stat-card"><div class="stat-value">' + formatNumber(l.sent) + '</div>' +
+              '<div class="stat-label">تسویه پرداختی</div></div>' +
+              '<div class="stat-card"><div class="stat-value">' + formatNumber(l.received) + '</div>' +
+              '<div class="stat-label">تسویه دریافتی</div></div></div>'
+            : '';
+
+        setHTML('memberDetailContent',
+            '<div style="text-align:center;margin-bottom:20px;">' +
+            '<div style="font-size:60px;margin-bottom:12px;">' + escAvatar(member.avatar) + '</div>' +
+            '<h3 style="font-size:20px;margin-bottom:8px;">' + esc(member.name) + '</h3>' +
+            adminBadge + offBadge + '</div>' +
+            '<div class="stats-grid">' +
+            '<div class="stat-card info"><div class="stat-value">' + formatNumber(l.paid) + '</div>' +
+            '<div class="stat-label">پرداخت کرده (' + cur + ')</div></div>' +
+            '<div class="stat-card warning"><div class="stat-value">' + formatNumber(l.share) + '</div>' +
+            '<div class="stat-label">سهم از هزینه (' + cur + ')</div></div>' +
+            '</div>' + settleRow +
+            '<div class="stat-card ' + (l.balance >= 0 ? 'success' : 'danger') + '" style="margin-top:12px;">' +
+            '<div class="stat-value">' + formatSigned(l.balance) + '</div>' +
+            '<div class="stat-label">' + (l.balance >= 0 ? 'طلبکار' : 'بدهکار') + ' (' + cur + ')</div></div>'
+        );
+        showModal('memberDetailModal');
+    }
+
+    function editCurrentMember() {
+        if (!requireAdmin()) return;
+        const member = getMember(currentMemberId);
+        if (!member) return;
+        hideModal('memberDetailModal');
+        $('editMemberId').value = member.id;
+        $('editMemberName').value = member.name;
+        formAvatars.editMember = AVATAR_SET.has(member.avatar) ? member.avatar : DEFAULT_AVATAR;
+        renderAvatarGrid('editMemberAvatarGrid', 'editMember');
+        showModal('editMemberModal');
+    }
+
+    function updateMember() {
+        if (!requireAdmin()) return;
+        const id = $('editMemberId').value;
+        const member = getMember(id);
+        if (!member) return;
+        const name = $('editMemberName').value.trim();
+        if (!name) { showToast('نام نمی‌تواند خالی باشد', 'error'); return; }
+        const clash = currentTrip.members.some(m => m.id !== id && m.name === name && m.active !== false);
+        if (clash) { showToast('عضو دیگری با این نام وجود دارد', 'error'); return; }
+
+        const before = { name: member.name, avatar: member.avatar };
+        member.name = name.slice(0, 40);
+        member.avatar = formAvatars.editMember;
+        if (currentUser && currentUser.id === id) currentUser = member;
+
+        touch(); saveToStorage(); hideModal('editMemberModal'); renderAll();
+        actionWithUndo('عضو بروزرسانی شد', 'ویرایش عضو', () => {
+            member.name = before.name; member.avatar = before.avatar;
+        });
+    }
+
+    function toggleCurrentMember() {
+        if (!requireAdmin()) return;
+        const member = getMember(currentMemberId);
+        if (!member) return;
+        if (member.id === currentTrip.adminId) { showToast('مدیر قابل غیرفعال کردن نیست', 'error'); return; }
+        member.active = member.active === false;
+        touch(); saveToStorage(); hideModal('memberDetailModal'); renderAll();
+        showToast(member.active ? 'عضو فعال شد' : 'عضو غیرفعال شد. هزینه‌های قبلی حفظ می‌شوند.', 'success', 4000);
+    }
+
+    function removeCurrentMember() {
+        if (!requireAdmin()) return;
+        const member = getMember(currentMemberId);
+        if (!member) return;
+        if (member.id === currentTrip.adminId) { showToast('مدیر قابل حذف نیست', 'error'); return; }
+
+        const used = currentTrip.expenses.some(e => e.payerId === member.id || e.splitBetween.indexOf(member.id) >= 0) ||
+                     (currentTrip.payments || []).some(p => p.from === member.id || p.to === member.id);
+        if (used) {
+            showToast('این عضو در هزینه‌ها یا پرداخت‌ها نقش دارد. بجای حذف، غیرفعالش کنید.', 'warning', 5000);
+            return;
+        }
+        askConfirm('حذف عضو', '"' + member.name + '" حذف شود؟', () => {
+            const idx = currentTrip.members.findIndex(m => m.id === member.id);
+            const removed = currentTrip.members.splice(idx, 1)[0];
+            touch(); saveToStorage(); hideModal('memberDetailModal'); renderAll();
+            actionWithUndo('عضو حذف شد', 'حذف عضو', () => { currentTrip.members.splice(idx, 0, removed); });
+        });
+    }
+
+    // ========== EXPENSE FORM (FIX #1) ==========
+    // v2 had two separate modals: the edit one could change the amount but had
+    // no way to touch splitBetween/customAmounts, so editing the amount of a
+    // custom-split expense left stale shares and money vanished from the books.
+    // Add and edit now drive the exact same form and the same validation.
+
+    function setSplitType(type) {
+        splitType = (type === 'custom') ? 'custom' : 'equal';
+        vibrate(5);
+        document.querySelectorAll('.split-toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.split === splitType);
+        });
+        $('splitEqualSection').style.display = splitType === 'equal' ? 'block' : 'none';
+        $('splitCustomSection').style.display = splitType === 'custom' ? 'block' : 'none';
+        updateSplitSummary();
+    }
+
+    function openExpenseModal(expenseId) {
+        if (!currentTrip) return;
+        if (!currentUser) { showToast('اول مشخص کنید کدام عضو هستید', 'warning'); promptIdentity(); return; }
+
+        const editing = expenseId ? currentTrip.expenses.find(e => e.id === expenseId) : null;
+        if (expenseId && !editing) return;
+        if (editing && !requireAdmin()) return;
+
+        $('expenseEditId').value = editing ? editing.id : '';
+        setText('expenseModalTitle', editing ? 'ویرایش هزینه' : 'هزینه جدید');
+        const saveBtn = $('expenseSaveBtn');
+        if (saveBtn) saveBtn.textContent = editing ? 'ذخیره تغییرات' : 'ثبت هزینه';
+
+        $('expenseTitle').value = editing ? editing.title : '';
+        $('expenseAmount').value = editing ? formatNumber(editing.amount) : '';
+        setText('currencyLabel', '(' + getCurrency() + ')');
+
+        selectedCategory = editing ? editing.category : 'food';
+        renderCategoryGrid('categoryGrid', selectedCategory);
+
+        // When editing, an inactive member may legitimately still be the payer.
+        const pool = editing
+            ? currentTrip.members.filter(m => m.active !== false || m.id === editing.payerId ||
+                                              editing.splitBetween.indexOf(m.id) >= 0)
+            : getActiveMembers();
+
+        const payerSel = editing ? editing.payerId : (currentUser ? currentUser.id : (pool[0] && pool[0].id));
+        $('expensePayer').innerHTML = pool.map(m =>
+            '<option value="' + esc(m.id) + '"' + (m.id === payerSel ? ' selected' : '') + '>' +
+            escAvatar(m.avatar) + ' ' + esc(m.name) + '</option>'
+        ).join('');
+
+        const inSplit = id => !editing || editing.splitBetween.indexOf(id) >= 0;
+        $('splitMembersList').innerHTML = pool.map(m =>
+            '<label class="checkbox-item"><input type="checkbox" value="' + esc(m.id) + '"' +
+            (inSplit(m.id) ? ' checked' : '') + '><span>' + escAvatar(m.avatar) + ' ' + esc(m.name) + '</span></label>'
+        ).join('');
+
+        $('customSplitList').innerHTML = pool.map(m => {
+            let val = '';
+            if (editing && editing.splitType === 'custom' && editing.customAmounts &&
+                editing.customAmounts[m.id] != null) {
+                val = formatNumber(editing.customAmounts[m.id]);
+            }
+            return '<div class="custom-split-item"><div class="info">' +
+                   '<span class="avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="name">' + esc(m.name) + '</span></div>' +
+                   '<input type="text" data-member="' + esc(m.id) + '" placeholder="0" inputmode="numeric" ' +
+                   'autocomplete="off" value="' + esc(val) + '"></div>';
+        }).join('');
+
+        setSplitType(editing ? editing.splitType : 'equal');
+        showModal('expenseModal');
+    }
+
+    function checkedSplitIds() {
+        return Array.prototype.map.call(
+            document.querySelectorAll('#splitMembersList input:checked'), cb => cb.value);
+    }
+    function customSplitEntries() {
+        return Array.prototype.map.call(
+            document.querySelectorAll('#customSplitList input'),
+            inp => ({ id: inp.dataset.member, amount: parseAmount(inp.value) || 0 }));
+    }
+
+    function updateSplitSummary() {
+        const amount = parsePositiveAmount($('expenseAmount').value) || 0;
+        const cur = getCurrency();
+
+        if (splitType === 'equal') {
+            const ids = checkedSplitIds();
+            const hint = $('splitEqualHint');
+            if (!hint) return;
+            if (!ids.length) { hint.textContent = 'حداقل یک نفر را انتخاب کنید'; return; }
+            if (!amount) { hint.textContent = toPersian(ids.length) + ' نفر انتخاب شده'; return; }
+            const base = Math.floor(amount / ids.length);
+            const rem = amount - base * ids.length;
+            hint.textContent = toPersian(ids.length) + ' نفر - هر نفر ' + formatNumber(base) +
+                (rem ? ' تا ' + formatNumber(base + 1) : '') + ' ' + cur;
+            return;
+        }
+
+        const totalEl = $('customSplitTotal');
+        if (!totalEl) return;
+        const sum = customSplitEntries().reduce((s, e) => s + e.amount, 0);
+        if (!amount) {
+            totalEl.className = 'custom-split-total';
+            totalEl.textContent = 'مجموع: ' + formatNumber(sum) + ' ' + cur;
+            return;
+        }
+        const diff = sum - amount;
+        if (diff === 0) {
+            totalEl.className = 'custom-split-total match';
+            totalEl.textContent = 'مجموع ' + formatNumber(sum) + ' ' + cur + ' - با مبلغ هزینه می‌خواند';
+        } else {
+            totalEl.className = 'custom-split-total mismatch';
+            totalEl.textContent = 'مجموع ' + formatNumber(sum) + ' - ' +
+                (diff > 0 ? 'بیشتر' : 'کمتر') + ' از مبلغ هزینه: ' + formatNumber(Math.abs(diff)) + ' ' + cur;
+        }
+    }
+
+    function splitSelectAll(select) {
+        document.querySelectorAll('#splitMembersList input').forEach(cb => { cb.checked = select; });
+        updateSplitSummary();
+    }
+    function splitClearCustom() {
+        document.querySelectorAll('#customSplitList input').forEach(i => { i.value = ''; });
+        updateSplitSummary();
+    }
+    function splitDistribute() {
+        const amount = parsePositiveAmount($('expenseAmount').value);
+        if (!amount) { showToast('اول مبلغ را وارد کنید', 'error'); return; }
+        const inputs = Array.prototype.slice.call(document.querySelectorAll('#customSplitList input'));
+        if (!inputs.length) return;
+        const base = Math.floor(amount / inputs.length);
+        const rem = amount - base * inputs.length;
+        inputs.forEach((inp, i) => { inp.value = formatNumber(base + (i < rem ? 1 : 0)); });
+        updateSplitSummary();
+    }
+
+    /**
+     * Single save path for both new and edited expenses.
+     * The custom branch validates that the parts add up to the whole BEFORE
+     * writing, so an edit can never leave the ledger unbalanced (FIX #1).
+     */
+    function saveExpense() {
+        if (!currentTrip || !currentUser) return;
+
+        const editId = $('expenseEditId').value;
+        const editing = editId ? currentTrip.expenses.find(e => e.id === editId) : null;
+        if (editId && !editing) { showToast('هزینه یافت نشد', 'error'); return; }
+        if (editing && !requireAdmin()) return;
+        if (!editing && currentTrip.expenses.length >= MAX_EXPENSES) {
+            showToast('تعداد هزینه‌ها به حداکثر رسیده', 'error'); return;
+        }
+
+        const title = $('expenseTitle').value.trim();
+        const amount = parsePositiveAmount($('expenseAmount').value);
+        const payerId = $('expensePayer').value;
+
+        if (!title) { showToast('عنوان هزینه را وارد کنید', 'error'); return; }
+        if (!amount) { showToast('مبلغ معتبر وارد کنید', 'error'); return; }
+        if (!getMember(payerId)) { showToast('پرداخت‌کننده معتبر نیست', 'error'); return; }
+
+        let splitBetween = [];
+        let customAmounts = null;
+
+        if (splitType === 'custom') {
+            const entries = customSplitEntries().filter(e => e.amount > 0 && getMember(e.id));
+            if (!entries.length) { showToast('برای حداقل یک نفر مبلغ وارد کنید', 'error'); return; }
+            const sum = entries.reduce((s, e) => s + e.amount, 0);
+            if (sum !== amount) {
+                showToast('مجموع سهم‌ها ' + formatNumber(sum) + ' است ولی مبلغ هزینه ' +
+                          formatNumber(amount) + '. باید برابر باشند.', 'error', 6000);
+                return;
+            }
+            splitBetween = entries.map(e => e.id);
+            customAmounts = {};
+            entries.forEach(e => { customAmounts[e.id] = e.amount; });
+        } else {
+            splitBetween = checkedSplitIds().filter(id => getMember(id));
+            if (!splitBetween.length) { showToast('حداقل یک نفر انتخاب کنید', 'error'); return; }
+        }
+
+        if (editing) {
+            const before = JSON.parse(JSON.stringify(editing));
+            editing.title = title.slice(0, 80);
+            editing.amount = amount;
+            editing.category = CATEGORY_IDS.has(selectedCategory) ? selectedCategory : 'other';
+            editing.payerId = payerId;
+            editing.splitBetween = splitBetween;
+            editing.splitType = splitType;
+            editing.customAmounts = customAmounts;
+
+            touch(); saveToStorage(); hideModal('expenseModal'); renderAll();
+            actionWithUndo('هزینه بروزرسانی شد', 'ویرایش هزینه', () => {
+                Object.assign(editing, before);
+            });
+        } else {
+            const expense = {
+                id: generateId(),
+                title: title.slice(0, 80),
+                amount: amount,
+                category: CATEGORY_IDS.has(selectedCategory) ? selectedCategory : 'other',
+                payerId: payerId,
+                splitBetween: splitBetween,
+                splitType: splitType,
+                customAmounts: customAmounts,
+                createdAt: Date.now()
+            };
+            currentTrip.expenses.push(expense);
+            touch(); saveToStorage(); hideModal('expenseModal'); renderAll();
+            actionWithUndo('هزینه ثبت شد', 'ثبت هزینه', () => {
+                const i = currentTrip.expenses.findIndex(e => e.id === expense.id);
+                if (i >= 0) currentTrip.expenses.splice(i, 1);
+            });
+        }
+    }
+
+    function showExpenseDetail(expenseId) {
+        const exp = currentTrip.expenses.find(e => e.id === expenseId);
+        if (!exp) return;
+        currentExpenseId = expenseId;
+
+        const payer = getMember(exp.payerId);
+        const cat = getCategoryInfo(exp.category);
+        const cur = esc(getCurrency());
+        const shares = expenseShares(exp);
+
+        const rows = exp.splitBetween.map(id => {
+            const m = getMember(id);
+            return '<div class="split-member-item"><span>' +
+                   (m ? escAvatar(m.avatar) + ' ' + esc(m.name) : 'نامشخص') + '</span><span>' +
+                   formatNumber(shares[id] || 0) + ' ' + cur + '</span></div>';
+        }).join('');
+
+        setHTML('expenseDetailContent',
+            '<div style="text-align:center;margin-bottom:20px;">' +
+            '<div style="font-size:48px;margin-bottom:12px;">' + esc(cat.icon) + '</div>' +
+            '<h3 style="font-size:18px;margin-bottom:8px;">' + esc(exp.title) + '</h3>' +
+            '<div style="font-size:24px;font-weight:900;color:var(--primary);">' +
+            formatNumber(exp.amount) + ' ' + cur + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">' +
+            esc(formatDateTime(exp.createdAt)) + '</div></div>' +
+            '<div class="expense-detail-info">' +
+            '<div class="info-row"><span>پرداخت‌کننده</span><span>' +
+            (payer ? escAvatar(payer.avatar) + ' ' + esc(payer.name) : 'نامشخص') + '</span></div>' +
+            '<div class="info-row"><span>دسته‌بندی</span><span>' + esc(cat.icon) + ' ' + esc(cat.name) + '</span></div>' +
+            '<div class="info-row"><span>تقسیم بین</span><span>' + toPersian(exp.splitBetween.length) + ' نفر</span></div>' +
+            '<div class="info-row"><span>نوع تقسیم</span><span>' +
+            (exp.splitType === 'custom' ? 'سفارشی' : 'مساوی') + '</span></div></div>' +
+            '<div class="divider">سهم هر نفر</div>' +
+            '<div class="split-members-list">' + rows + '</div>'
+        );
+        showModal('expenseDetailModal');
+    }
+
+    function editCurrentExpense() {
+        hideModal('expenseDetailModal');
+        openExpenseModal(currentExpenseId);
+    }
+
+    function deleteCurrentExpense() {
+        if (!requireAdmin()) return;
+        const idx = currentTrip.expenses.findIndex(e => e.id === currentExpenseId);
+        if (idx < 0) return;
+        askConfirm('حذف هزینه', 'این هزینه حذف شود؟', () => {
+            const removed = currentTrip.expenses.splice(idx, 1)[0];
+            touch(); saveToStorage(); hideModal('expenseDetailModal'); renderAll();
+            actionWithUndo('هزینه حذف شد', 'حذف هزینه', () => {
+                currentTrip.expenses.splice(idx, 0, removed);
+            });
+        });
+    }
+
+    // ========== PAYMENTS / SETTLEMENT (FIX #3) ==========
+    // Marking a settlement paid now appends a real transfer to the ledger,
+    // so balances actually move and the row disappears from the to-do list.
+    function settleUp(fromId, toId, amount) {
+        if (!currentTrip) return;
+        const from = getMember(fromId), to = getMember(toId);
+        const amt = toInt(amount);
+        if (!from || !to || amt <= 0) return;
+
+        askConfirm('ثبت پرداخت',
+            from.name + ' مبلغ ' + formatNumber(amt) + ' ' + getCurrency() + ' به ' + to.name + ' پرداخت کرد؟',
+            () => {
+                const payment = { id: generateId(), from: fromId, to: toId, amount: amt, createdAt: Date.now() };
+                if (!currentTrip.payments) currentTrip.payments = [];
+                currentTrip.payments.push(payment);
+                touch(); saveToStorage(); renderAll();
+                actionWithUndo('پرداخت ثبت شد', 'ثبت پرداخت', () => {
+                    const i = currentTrip.payments.findIndex(p => p.id === payment.id);
+                    if (i >= 0) currentTrip.payments.splice(i, 1);
+                });
+            }, 'بله، پرداخت شد');
+    }
+
+    function deletePayment(paymentId) {
+        if (!currentTrip) return;
+        const idx = (currentTrip.payments || []).findIndex(p => p.id === paymentId);
+        if (idx < 0) return;
+        askConfirm('حذف پرداخت', 'این پرداخت حذف شود؟ بدهی دوباره برمی‌گردد.', () => {
+            const removed = currentTrip.payments.splice(idx, 1)[0];
+            touch(); saveToStorage(); renderAll();
+            actionWithUndo('پرداخت حذف شد', 'حذف پرداخت', () => {
+                currentTrip.payments.splice(idx, 0, removed);
+            });
+        });
+    }
+
+    // ========== AVATAR / CATEGORY GRIDS ==========
+    function renderAvatarGrid(containerId, formKey) {
+        const container = $(containerId);
+        if (!container) return;
+        const selected = formAvatars[formKey] || DEFAULT_AVATAR;
+        container.dataset.avatarGrid = formKey;
+        container.innerHTML = AVATARS.map(a =>
+            '<div class="avatar-option' + (a === selected ? ' selected' : '') +
+            '" role="button" tabindex="0" data-avatar="' + esc(a) + '">' + esc(a) + '</div>'
+        ).join('');
+    }
+    function selectAvatar(containerId, formKey, avatar) {
+        if (!AVATAR_SET.has(avatar)) return;
+        formAvatars[formKey] = avatar;          // FIX #19: scoped per form
+        vibrate(5);
+        const container = $(containerId);
+        if (!container) return;
+        container.querySelectorAll('.avatar-option').forEach(el => {
+            el.classList.toggle('selected', el.dataset.avatar === avatar);
+        });
+    }
+
+    function renderCategoryGrid(containerId, selected) {
+        const container = $(containerId);
+        if (!container) return;
+        container.innerHTML = CATEGORIES.map(c =>
+            '<div class="category-option' + (c.id === selected ? ' selected' : '') +
+            '" role="button" tabindex="0" data-cat="' + esc(c.id) + '">' +
+            '<span class="icon">' + esc(c.icon) + '</span>' +
+            '<span class="label">' + esc(c.name) + '</span></div>'
+        ).join('');
+    }
+    function selectCategory(containerId, catId) {
+        if (!CATEGORY_IDS.has(catId)) return;
+        selectedCategory = catId;
+        vibrate(5);
+        const container = $(containerId);
+        if (!container) return;
+        container.querySelectorAll('.category-option').forEach(el => {
+            el.classList.toggle('selected', el.dataset.cat === catId);   // matched by id, not by icon
+        });
+    }
+
+    // ========== FILTER CHIPS ==========
+    function renderFilterChips() {
+        const container = $('filterChips');
+        if (!container) return;
+        container.innerHTML =
+            '<button class="filter-chip' + (filterCategory === 'all' ? ' active' : '') +
+            '" data-act="filter" data-arg="all">همه</button>' +
+            CATEGORIES.map(c =>
+                '<button class="filter-chip' + (filterCategory === c.id ? ' active' : '') +
+                '" data-act="filter" data-arg="' + esc(c.id) + '">' +
+                esc(c.icon) + ' ' + esc(c.name) + '</button>'
+            ).join('');
+    }
+    function setFilter(cat) {
+        filterCategory = (cat === 'all' || CATEGORY_IDS.has(cat)) ? cat : 'all';
+        renderFilterChips();
+        renderExpensesList();
+        vibrate(5);
+    }
+
+    // ========== RENDERING ==========
+    function renderAll() {
+        if (!currentTrip) return;
+        const active = getActiveMembers();
+
+        setText('tripNameDisplay', currentTrip.name);
+        setText('memberCountDisplay', toPersian(active.length));
+        setText('tripDateDisplay', currentTrip.date);
+        setText('tripCodeSmall', currentTrip.code);
+        $('editTripName').value = currentTrip.name;
+        $('editTripDate').value = currentTrip.date;
+
+        const total = totalExpenses();
+        setText('totalExpenses', formatNumber(total));
+        setText('perPersonAvg', formatNumber(averageShare()));       // FIX #17
+        setText('expenseCount', toPersian(currentTrip.expenses.length));
+        setText('expensesBadge', toPersian(currentTrip.expenses.length));
+        setText('paymentsBadge', toPersian((currentTrip.payments || []).length));
+
+        const myBalance = currentUser ? balanceOf(currentUser.id) : 0;
+        setText('myBalance', currentUser ? formatSigned(myBalance) : '-');
+        setText('myBalanceLabel', currentUser ? (myBalance >= 0 ? 'طلبکارم' : 'بدهکارم') : 'عضو خود را انتخاب کنید');
+        const card = $('myBalanceCard');
+        if (card) card.className = 'stat-card ' + (!currentUser ? 'warning' : (myBalance >= 0 ? 'success' : 'danger'));
+
+        renderQuickBalance();
+        renderRecentExpenses();
+        renderExpensesList();
+        renderMembersList();
+        renderSettlements();
+        renderPayments();
+        renderReportStats();
+        if ($('reportsScreen').classList.contains('active')) renderChart();
+        updateAdminUI();
+    }
+
+    // FIX #18: an inactive member holding a balance used to vanish from this
+    // card while still showing up in the settlement list.
+    function renderQuickBalance() {
+        const ledger = computeLedger();
+        const rows = currentTrip.members.filter(m =>
+            m.active !== false || Math.abs((ledger.get(m.id) || {}).balance || 0) >= 1);
+
+        setHTML('quickBalanceList', rows.length ? rows.map(m => {
+            const bal = (ledger.get(m.id) || {}).balance || 0;
+            const off = m.active === false ? ' <span class="inactive-badge">غیرفعال</span>' : '';
+            return '<div class="balance-item"><div class="balance-info">' +
+                   '<span class="balance-avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="balance-name">' + esc(m.name) + off + '</span></div>' +
+                   '<span class="balance-amount ' + (bal >= 0 ? 'positive' : 'negative') + '">' +
+                   formatSigned(bal) + '</span></div>';
+        }).join('') : '<div class="empty-state"><div class="desc">عضوی نیست</div></div>');
+    }
+
+    function expenseItemHTML(exp) {
+        const cat = getCategoryInfo(exp.category);
+        const payer = getMember(exp.payerId);
+        return '<div class="expense-item" role="button" tabindex="0" data-act="openExpense" data-arg="' + esc(exp.id) + '">' +
+               '<div class="expense-icon">' + esc(cat.icon) + '</div>' +
+               '<div class="expense-info"><div class="expense-title">' + esc(exp.title) + '</div>' +
+               '<div class="expense-meta"><span>' + esc(payer ? payer.name : 'نامشخص') + '</span>' +
+               '<span>-</span><span>' + esc(cat.name) + '</span></div></div>' +
+               '<div class="expense-right"><div class="expense-amount">' + formatNumber(exp.amount) + '</div>' +
+               '<div class="expense-date">' + esc(formatDate(exp.createdAt)) + '</div></div></div>';
+    }
+
+    function renderRecentExpenses() {
+        const recent = currentTrip.expenses.slice(-3).reverse();
+        setHTML('recentExpensesList', recent.length
+            ? recent.map(expenseItemHTML).join('')
+            : '<div class="empty-state"><span class="icon">+</span>' +
+              '<div class="title">هنوز هزینه‌ای ثبت نشده</div>' +
+              '<div class="desc">اولین هزینه سفر را ثبت کنید</div></div>');
+    }
+
+    function renderExpensesList() {
+        const searchEl = $('expenseSearch');
+        const q = searchEl && searchEl.value ? searchEl.value.trim().toLowerCase() : '';
+        let list = currentTrip.expenses.slice().reverse();
+
+        if (filterCategory !== 'all') list = list.filter(e => e.category === filterCategory);
+        if (q) {
+            list = list.filter(e => {
+                const payer = getMember(e.payerId);
+                return e.title.toLowerCase().indexOf(q) >= 0 ||
+                       (payer && payer.name.toLowerCase().indexOf(q) >= 0);
+            });
+        }
+        setHTML('expensesList', list.length
+            ? list.map(expenseItemHTML).join('')
+            : '<div class="empty-state"><span class="icon">-</span><div class="title">' +
+              ((q || filterCategory !== 'all') ? 'نتیجه‌ای یافت نشد' : 'هنوز هزینه‌ای ثبت نشده') + '</div></div>');
+    }
+
+    function renderMembersList() {
+        const ledger = computeLedger();
+        const cur = esc(getCurrency());
+        setHTML('membersList', currentTrip.members.map(m => {
+            const bal = (ledger.get(m.id) || {}).balance || 0;
+            const isActive = m.active !== false;
+            const isMe = currentUser && currentUser.id === m.id;
+            return '<div class="member-item' + (isActive ? '' : ' inactive') +
+                   '" role="button" tabindex="0" data-act="openMember" data-arg="' + esc(m.id) + '">' +
+                   '<div class="member-avatar">' + escAvatar(m.avatar) + '</div>' +
+                   '<div class="member-info"><div class="member-name">' + esc(m.name) +
+                   (m.id === currentTrip.adminId ? '<span class="admin-badge">(مدیر)</span>' : '') +
+                   (isMe ? '<span class="inactive-badge">شما</span>' : '') +
+                   (isActive ? '' : '<span class="inactive-badge">غیرفعال</span>') + '</div>' +
+                   '<div class="member-balance ' + (bal >= 0 ? 'positive' : 'negative') + '">' +
+                   (bal >= 0 ? 'طلبکار' : 'بدهکار') + ': ' + formatNumber(Math.abs(bal)) + ' ' + cur +
+                   '</div></div></div>';
+        }).join(''));
+    }
+
+    function renderSettlements() {
+        const settlements = calculateSettlements();
+        const cur = esc(getCurrency());
+        setHTML('settlementList', settlements.length
+            ? settlements.map(s =>
+                '<div class="settlement-item">' +
+                '<div class="settlement-person"><div class="avatar">' + escAvatar(s.from.avatar) + '</div>' +
+                '<div class="name">' + esc(s.from.name) + '</div></div>' +
+                '<div class="settlement-arrow"><div class="amount">' + formatNumber(s.amount) + ' ' + cur + '</div>' +
+                '<div class="arrow-icon">&#8592;</div></div>' +
+                '<div class="settlement-person"><div class="avatar">' + escAvatar(s.to.avatar) + '</div>' +
+                '<div class="name">' + esc(s.to.name) + '</div></div>' +
+                '<button class="btn btn-sm btn-success" style="white-space:nowrap;" data-act="settle" ' +
+                'data-from="' + esc(s.from.id) + '" data-to="' + esc(s.to.id) + '" data-amount="' + s.amount + '">' +
+                'پرداخت شد</button></div>'
+            ).join('')
+            : '<div class="empty-state"><span class="icon">*</span>' +
+              '<div class="title">همه تسویه شده‌اند</div></div>');
+    }
+
+    function renderPayments() {
+        const payments = (currentTrip.payments || []).slice().reverse();
+        const cur = esc(getCurrency());
+        setHTML('paymentsList', payments.length
+            ? payments.map(p => {
+                const from = getMember(p.from), to = getMember(p.to);
+                return '<div class="payment-item">' +
+                       '<div class="pay-text">' + esc(from ? from.name : '?') + ' &#8592; ' +
+                       esc(to ? to.name : '?') +
+                       '<div class="pay-date">' + esc(formatDateTime(p.createdAt)) + '</div></div>' +
+                       '<span class="pay-amount">' + formatNumber(p.amount) + ' ' + cur + '</span>' +
+                       '<button class="payment-del" data-act="delPayment" data-arg="' + esc(p.id) +
+                       '" title="حذف پرداخت" aria-label="حذف پرداخت">x</button></div>';
+            }).join('')
+            : '<div class="empty-state"><div class="desc">هنوز پرداختی ثبت نشده</div></div>');
+    }
+
+    function renderReportStats() {
+        const cur = esc(getCurrency());
+        const total = totalExpenses();
+        const n = currentTrip.expenses.length;
+        const avg = n ? Math.round(total / n) : 0;
+        const max = currentTrip.expenses.reduce((m, e) => (e.amount > m.amount ? e : m), { amount: 0, title: '-' });
+        const active = getActiveMembers();
+        const settledTotal = (currentTrip.payments || []).reduce((s, p) => s + p.amount, 0);
+
+        const row = (label, value) =>
+            '<div class="report-stat-row"><span>' + label + '</span><strong>' + value + '</strong></div>';
+
+        setHTML('reportStats',
+            row('کل هزینه‌ها', formatNumber(total) + ' ' + cur) +
+            row('میانگین هر هزینه', formatNumber(avg) + ' ' + cur) +
+            row('بیشترین هزینه', esc(max.title) + ' (' + formatNumber(max.amount) + ')') +
+            row('میانگین سهم هر نفر', formatNumber(averageShare()) + ' ' + cur) +
+            row('اعضای فعال', toPersian(active.length) + ' نفر') +
+            row('تعداد هزینه', toPersian(n)) +
+            row('مجموع تسویه‌شده', formatNumber(settledTotal) + ' ' + cur)
+        );
+
+        const ledger = computeLedger();
+        const spenders = currentTrip.members
+            .map(m => ({ m: m, paid: (ledger.get(m.id) || {}).paid || 0 }))
+            .filter(s => s.paid > 0)
+            .sort((a, b) => b.paid - a.paid)
+            .slice(0, 5);
+
+        setHTML('topSpenders', spenders.length
+            ? spenders.map((s, i) =>
+                '<div class="top-spender-item"><span class="rank">' + toPersian(i + 1) + '</span>' +
+                '<span class="spender-avatar">' + escAvatar(s.m.avatar) + '</span>' +
+                '<span class="spender-name">' + esc(s.m.name) + '</span>' +
+                '<span class="spender-amount">' + formatNumber(s.paid) + '</span></div>'
+            ).join('')
+            : '<div class="empty-state"><div class="desc">هنوز پرداختی ثبت نشده</div></div>');
+    }
+
+    // ========== SVG DONUT CHART (FIX #10: no Chart.js, works offline) ==========
+    function renderChart() {
+        const box = $('chartContainer');
+        if (!box || !currentTrip) return;
+
+        const totals = {};
+        CATEGORIES.forEach(c => { totals[c.id] = 0; });
+        currentTrip.expenses.forEach(e => {
+            const key = CATEGORY_IDS.has(e.category) ? e.category : 'other';   // FIX #22
+            totals[key] += e.amount;
+        });
+
+        const slices = CATEGORIES.filter(c => totals[c.id] > 0);
+        const total = slices.reduce((s, c) => s + totals[c.id], 0);
+
+        if (!total) {
+            box.innerHTML = '<div class="empty-state"><span class="icon">%</span>' +
+                            '<div class="desc">داده‌ای برای نمودار وجود ندارد</div></div>';
+            return;
+        }
+
+        const R = 70, SW = 26, CIRC = 2 * Math.PI * R;
+        let offset = 0;
+        const segs = slices.map(c => {
+            const val = totals[c.id];
+            const len = (val / total) * CIRC;
+            const seg = '<circle class="donut-seg" cx="90" cy="90" r="' + R + '" fill="none" ' +
+                        'stroke="' + c.color + '" stroke-width="' + SW + '" ' +
+                        'stroke-dasharray="' + len.toFixed(3) + ' ' + (CIRC - len).toFixed(3) + '" ' +
+                        'stroke-dashoffset="' + (-offset).toFixed(3) + '" ' +
+                        'transform="rotate(-90 90 90)"><title>' + esc(c.name) + ': ' +
+                        formatNumber(val) + '</title></circle>';
+            offset += len;
+            return seg;
+        }).join('');
+
+        const legend = slices.map(c => {
+            const pct = Math.round((totals[c.id] / total) * 100);
+            return '<div class="legend-item"><span class="legend-dot" style="background:' + c.color + '"></span>' +
+                   '<span class="legend-name">' + esc(c.name) + '</span>' +
+                   '<span class="legend-val">' + toPersian(pct) + '%</span></div>';
+        }).join('');
+
+        box.innerHTML =
+            '<div class="donut-wrap"><svg viewBox="0 0 180 180" role="img" ' +
+            'aria-label="نمودار هزینه‌ها بر اساس دسته‌بندی">' + segs + '</svg>' +
+            '<div class="donut-center"><div class="dc-value">' + formatNumber(total) + '</div>' +
+            '<div class="dc-label">' + esc(getCurrency()) + '</div></div></div>' +
+            '<div class="chart-legend">' + legend + '</div>';
+    }
+
+    // ========== PRINT / PDF REPORT (FIX #8) ==========
+    // v2 used jsPDF, whose built-in fonts have no Arabic/Persian glyphs and no
+    // RTL shaping, so every Persian name and title came out blank or garbled.
+    // Rendering to HTML and handing it to the browser print engine produces a
+    // correct Persian PDF via "Save as PDF" and drops a 350KB dependency.
+    function buildPrintReport() {
+        const cur = esc(getCurrency());
+        const ledger = computeLedger();
+        const total = totalExpenses();
+        const active = getActiveMembers();
+
+        const head =
+            '<div class="pr-head">' +
+            '<div class="pr-title">گزارش سفرینو</div>' +
+            '<div class="pr-trip">' + esc(currentTrip.name) + '</div>' +
+            '<div class="pr-meta">' + esc(currentTrip.date) + ' | کد سفر: ' + esc(currentTrip.code) +
+            ' | اعضای فعال: ' + toPersian(active.length) +
+            ' | تاریخ گزارش: ' + esc(formatDateTime(Date.now())) + '</div></div>';
+
+        const summary =
+            '<h2>خلاصه</h2><table><tbody>' +
+            '<tr><th>کل هزینه‌ها</th><td class="num">' + formatNumber(total) + ' ' + cur + '</td></tr>' +
+            '<tr><th>تعداد هزینه</th><td class="num">' + toPersian(currentTrip.expenses.length) + '</td></tr>' +
+            '<tr><th>میانگین سهم هر نفر</th><td class="num">' + formatNumber(averageShare()) + ' ' + cur + '</td></tr>' +
+            '<tr><th>مجموع تسویه‌شده</th><td class="num">' +
+            formatNumber((currentTrip.payments || []).reduce((s, p) => s + p.amount, 0)) + ' ' + cur + '</td></tr>' +
+            '</tbody></table>';
+
+        const balances =
+            '<h2>وضعیت اعضا</h2><table><thead><tr><th>عضو</th><th>پرداخت کرده</th>' +
+            '<th>سهم</th><th>تسویه</th><th>مانده</th></tr></thead><tbody>' +
+            currentTrip.members.map(m => {
+                const l = ledger.get(m.id) || { paid: 0, share: 0, sent: 0, received: 0, balance: 0 };
+                const net = l.sent - l.received;
+                return '<tr><td>' + esc(m.name) + (m.active === false ? ' (غیرفعال)' : '') + '</td>' +
+                       '<td class="num">' + formatNumber(l.paid) + '</td>' +
+                       '<td class="num">' + formatNumber(l.share) + '</td>' +
+                       '<td class="num">' + (net ? formatSigned(net) : '-') + '</td>' +
+                       '<td class="num ' + (l.balance >= 0 ? 'pos' : 'neg') + '">' +
+                       formatSigned(l.balance) + '</td></tr>';
+            }).join('') + '</tbody></table>';
+
+        const settlements = calculateSettlements();
+        const settleSec = '<h2>تسویه‌های باقی‌مانده</h2>' + (settlements.length
+            ? '<table><thead><tr><th>از</th><th>به</th><th>مبلغ</th></tr></thead><tbody>' +
+              settlements.map(s => '<tr><td>' + esc(s.from.name) + '</td><td>' + esc(s.to.name) +
+              '</td><td class="num">' + formatNumber(s.amount) + ' ' + cur + '</td></tr>').join('') +
+              '</tbody></table>'
+            : '<div class="pr-empty">همه حساب‌ها تسویه شده است.</div>');
+
+        const payments = (currentTrip.payments || []);
+        const paySec = '<h2>پرداخت‌های ثبت‌شده</h2>' + (payments.length
+            ? '<table><thead><tr><th>از</th><th>به</th><th>مبلغ</th><th>تاریخ</th></tr></thead><tbody>' +
+              payments.map(p => {
+                  const f = getMember(p.from), t = getMember(p.to);
+                  return '<tr><td>' + esc(f ? f.name : '?') + '</td><td>' + esc(t ? t.name : '?') +
+                         '</td><td class="num">' + formatNumber(p.amount) + '</td><td>' +
+                         esc(formatDateTime(p.createdAt)) + '</td></tr>';
+              }).join('') + '</tbody></table>'
+            : '<div class="pr-empty">پرداختی ثبت نشده است.</div>');
+
+        const expSec = '<h2>فهرست هزینه‌ها</h2>' + (currentTrip.expenses.length
+            ? '<table><thead><tr><th>#</th><th>عنوان</th><th>دسته</th><th>پرداخت‌کننده</th>' +
+              '<th>شرکا</th><th>مبلغ</th><th>تاریخ</th></tr></thead><tbody>' +
+              currentTrip.expenses.map((e, i) => {
+                  const payer = getMember(e.payerId);
+                  return '<tr><td class="num">' + toPersian(i + 1) + '</td><td>' + esc(e.title) + '</td>' +
+                         '<td>' + esc(getCategoryInfo(e.category).name) + '</td>' +
+                         '<td>' + esc(payer ? payer.name : 'نامشخص') + '</td>' +
+                         '<td class="num">' + toPersian(e.splitBetween.length) + '</td>' +
+                         '<td class="num">' + formatNumber(e.amount) + '</td>' +
+                         '<td>' + esc(formatDate(e.createdAt)) + '</td></tr>';
+              }).join('') + '</tbody></table>'
+            : '<div class="pr-empty">هزینه‌ای ثبت نشده است.</div>');
+
+        const foot = '<div class="pr-foot">سفرینو نسخه ' + esc(APP_VERSION) + ' - محمد عباسی</div>';
+
+        setHTML('printArea', head + summary + balances + settleSec + paySec + expSec + foot);
+    }
+
+    function printReport() {
+        if (!currentTrip) return;
+        buildPrintReport();
+        showToast('پنجره چاپ باز می‌شود. مقصد را روی ذخیره به صورت PDF بگذارید.', 'info', 4000);
+        setTimeout(() => { try { window.print(); } catch (e) { showToast('چاپ ممکن نشد', 'error'); } }, 350);
+    }
+
+    // ========== IMPORT / EXPORT ==========
+    function safeFileName(name) {
+        return String(name || 'trip').replace(/[\/:*?"<>|]/g, '_').slice(0, 60);
+    }
+
+    function exportTrip() {
+        if (!currentTrip) return;
+        const data = JSON.stringify(currentTrip, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const fileName = 'safarino_' + safeFileName(currentTrip.name) + '.json';
+
+        const doDownload = () => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 2000);   // revoke AFTER the click lands
+        };
+
+        try {
+            const file = new File([blob], fileName, { type: 'application/json' });
+            if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+                navigator.share({ files: [file], title: 'سفرینو - ' + currentTrip.name })
+                    .catch(() => doDownload());
+            } else {
+                doDownload();
+            }
+        } catch (e) {
+            doDownload();
+        }
+        hideModal('importExportModal');
+        showToast('فایل سفر آماده شد', 'success');
+    }
+
+    function importTripFromFile() {
+        const input = $('fileInput');
+        if (input) input.click();
+    }
+
+    // FIX #15: everything that arrives from a file goes through sanitizeTrip.
+    function handleFileImport(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        if (file.size > 8 * 1024 * 1024) {
+            showToast('فایل خیلی بزرگ است', 'error');
+            event.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            let parsed = null;
+            try { parsed = JSON.parse(e.target.result); }
+            catch (err) { showToast('فایل JSON معتبر نیست', 'error'); return; }
+
+            const result = sanitizeTrip(parsed);
+            if (!result) { showToast('ساختار فایل سفر معتبر نیست', 'error'); return; }
+
+            const existing = localStorage.getItem(K_TRIP + result.trip.code);
+            const finish = () => {
+                currentTrip = result.trip;
+                touch();
+                saveToStorage();
+                hideModal('importExportModal');
+                openTrip(result.trip, result.issues);
+                showToast('سفر "' + result.trip.name + '" بارگذاری شد', 'success');
+            };
+            if (existing) {
+                askConfirm('سفر تکراری',
+                    'سفری با کد ' + result.trip.code + ' از قبل روی این دستگاه هست. جایگزین شود؟',
+                    finish, 'جایگزین کن');
+            } else {
+                finish();
+            }
+        };
+        reader.onerror = () => showToast('خطا در خواندن فایل', 'error');
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // ========== ACTION DISPATCH (FIX #2) ==========
+    // Every interactive element declares data-act instead of an inline onclick.
+    // Nothing built from user data is ever parsed as JavaScript, which removes
+    // the whole class of injection the v2 markup was open to.
+    const ACTIONS = {
+        modal:        arg => showModal(arg),
+        close:        arg => hideModal(arg),
+        confirmYes:   () => runConfirm(),
+        tab:          arg => switchTab(arg),
+        goBack:       () => showWelcomeScreen(),
+        theme:        arg => setTheme(arg),
+        toggleSettings: () => toggleSettings(),
+
+        createTrip:   () => createTrip(),
+        joinTrip:     () => joinTrip(),
+        saveTrip:     () => saveTrip(),
+        confirmDeleteTrip: () => confirmDeleteTrip(),
+        leaveTrip:    () => leaveTrip(),
+        share:        () => shareTripCode(),
+        copyCode:     () => copyTripCode(),
+        export:       () => exportTrip(),
+        importFile:   () => importTripFromFile(),
+        print:        () => printReport(),
+
+        openRecent:      arg => openRecent(arg),
+        askRemoveRecent: arg => askRemoveRecent(arg),
+        pickIdentity:    arg => pickIdentity(arg),
+
+        newExpense:   () => openExpenseModal(null),
+        openExpense:  arg => showExpenseDetail(arg),
+        editExpense:  () => editCurrentExpense(),
+        deleteExpense: () => deleteCurrentExpense(),
+        saveExpense:  () => saveExpense(),
+        splitType:    arg => setSplitType(arg),
+        splitAll:     () => splitSelectAll(true),
+        splitNone:    () => splitSelectAll(false),
+        splitClear:   () => splitClearCustom(),
+        splitDistribute: () => splitDistribute(),
+
+        addMember:    () => addMember(),
+        openMember:   arg => showMemberDetail(arg),
+        editMember:   () => editCurrentMember(),
+        updateMember: () => updateMember(),
+        toggleMember: () => toggleCurrentMember(),
+        removeMember: () => removeCurrentMember(),
+
+        filter:       arg => setFilter(arg),
+        delPayment:   arg => deletePayment(arg),
+        undo:         () => undoLast()
+    };
+
+    function dispatchAction(el, event) {
+        const name = el.dataset.act;
+        const fn = ACTIONS[name];
+        if (!fn) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (name === 'settle') return;
+        fn(el.dataset.arg, el, event);
+    }
+
+    document.addEventListener('click', e => {
+        // settle carries three data attributes rather than a single arg
+        const settleBtn = e.target.closest('[data-act="settle"]');
+        if (settleBtn) {
+            e.preventDefault();
+            settleUp(settleBtn.dataset.from, settleBtn.dataset.to, settleBtn.dataset.amount);
+            return;
+        }
+        const actionEl = e.target.closest('[data-act]');
+        if (actionEl) { dispatchAction(actionEl, e); return; }
+
+        const avatarEl = e.target.closest('.avatar-option');
+        if (avatarEl) {
+            const grid = avatarEl.closest('[data-avatar-grid]');
+            if (grid) selectAvatar(grid.id, grid.dataset.avatarGrid, avatarEl.dataset.avatar);
+            return;
+        }
+        const catEl = e.target.closest('.category-option');
+        if (catEl) {
+            const grid = catEl.closest('[data-category-grid]');
+            if (grid) selectCategory(grid.id, catEl.dataset.cat);
+            return;
+        }
+
+        // backdrop click closes a modal
+        if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
+            e.target.classList.remove('active');
+            if (!document.querySelector('.modal.active')) document.body.style.overflow = '';
+            return;
+        }
+        // outside click closes the settings panel
+        const panel = $('settingsPanel');
+        if (panel && panel.classList.contains('show') && !panel.contains(e.target) &&
+            !e.target.closest('[data-act="toggleSettings"]')) {
+            panel.classList.remove('show');
+        }
+    });
+
+    // keyboard activation for the div/role=button rows
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const el = e.target.closest('[role="button"], .avatar-option, .category-option');
+        if (el) { e.preventDefault(); el.click(); }
+    });
+
+    // ========== INPUT HANDLING ==========
+    /**
+     * FIX #12: v2 rewrote the field on every keystroke and dropped the caret at
+     * the end, making it impossible to correct a digit in the middle. We now
+     * restore the caret to the same logical position (same number of digits to
+     * its left) after reformatting.
+     */
+    function formatAmountField(input) {
+        const before = input.value;
+        const caret = input.selectionStart == null ? before.length : input.selectionStart;
+        const digitsBefore = countDigits(before.slice(0, caret));
+
+        const n = parseAmount(before);
+        const formatted = (n == null || n <= 0) ? (n === 0 ? '' : before.replace(/[^0-9۰-۹٠-٩,.\/٫]/g, ''))
+                                                : formatNumber(n);
+        if (formatted === before) return;
+        input.value = formatted;
+
+        let pos = 0, seen = 0;
+        while (pos < formatted.length && seen < digitsBefore) {
+            if (isDigitChar(formatted[pos])) seen++;
+            pos++;
+        }
+        try { input.setSelectionRange(pos, pos); } catch (e) {}
+    }
+
+    document.addEventListener('input', e => {
+        const t = e.target;
+        if (t.id === 'expenseAmount') {
+            formatAmountField(t);
+            updateSplitSummary();
+        } else if (t.closest && t.closest('#customSplitList')) {
+            formatAmountField(t);
+            updateSplitSummary();
+        } else if (t.id === 'expenseSearch') {
+            renderExpensesList();
+        }
+    });
+
+    document.addEventListener('change', e => {
+        if (e.target.closest && e.target.closest('#splitMembersList')) updateSplitSummary();
+        if (e.target.id === 'fileInput') handleFileImport(e);
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            const modal = document.querySelector('.modal.active');
+            if (modal && modal.id !== 'identityModal') {   // identity must be answered
+                modal.classList.remove('active');
+                if (!document.querySelector('.modal.active')) document.body.style.overflow = '';
+            }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && currentTrip) {
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag !== 'input' && tag !== 'textarea') { e.preventDefault(); undoLast(); }
+        }
+    });
+
+    // ========== SERVICE WORKER (FIX #9) ==========
+    // v2 tried to register a worker from a blob: URL, which the spec forbids -
+    // registration always threw and the error was swallowed, so there was never
+    // any offline support at all.
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(() => {
+                /* offline caching unavailable (e.g. opened via file://) - app still works */
+            });
+        });
+    }
+
+    // ========== INIT ==========
+    function init() {
+        let savedTheme = 'night';
+        try { savedTheme = localStorage.getItem(K_THEME) || 'night'; } catch (e) {}
+        setTheme(savedTheme);
+
+        renderAvatarGrid('adminAvatarGrid', 'create');
+        renderAvatarGrid('joinAvatarGrid', 'join');
+        renderAvatarGrid('newMemberAvatarGrid', 'member');
+        renderAvatarGrid('editMemberAvatarGrid', 'editMember');
+        renderFilterChips();
+
+        // Reopen the most recent trip, but only if we can identify the visitor.
+        const recent = readJSON(K_RECENT, []);
+        if (Array.isArray(recent) && recent.length && recent[0] && recent[0].code) {
+            const raw = readJSON(K_TRIP + recent[0].code, null);
+            if (raw) {
+                const result = sanitizeTrip(raw);
+                if (result && resolveIdentity(result.trip)) {
+                    openTrip(result.trip, result.issues);
+                    hideLoading();
+                    return;
+                }
+            }
+        }
+        loadRecentTrips();
+        hideLoading();
+    }
+
+    function hideLoading() {
+        const el = $('loadingOverlay');
+        if (el) el.classList.add('hide');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    </script>
+</body>
+</html>
