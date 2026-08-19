@@ -2163,6 +2163,46 @@
         .balance-item { padding: 9px 0; }
         .report-stat-row { padding: 11px 0; }
 
+
+        /* ===== SYNC STATUS ===== */
+        .sync-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+            background: var(--glass);
+            color: var(--text-muted);
+        }
+        .sync-badge::before {
+            content: "";
+            width: 7px; height: 7px; border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+        .sync-badge.ok   { color: var(--success); background: var(--success-bg); }
+        .sync-badge.busy { color: var(--info);    background: var(--info-bg); }
+        .sync-badge.warn { color: var(--warning); background: var(--warning-bg); }
+        .sync-badge.err  { color: var(--danger);  background: var(--danger-bg); }
+        .sync-badge.busy::before { animation: loadPulse 1s ease-in-out infinite; }
+
+        .share-link {
+            direction: ltr;
+            text-align: left;
+            font-family: ui-monospace, Menlo, monospace;
+            font-size: 11.5px;
+            line-height: 1.7;
+            word-break: break-all;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 11px 13px;
+            margin-top: 12px;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -2185,6 +2225,7 @@
         </div>
         <div class="top-bar-actions">
             <button class="btn btn-ghost btn-icon" id="importExportBtn" data-act="modal" data-arg="importExportModal" style="display:none;" title="ورود/خروج داده" aria-label="ورود و خروج داده">📦</button>
+            <span class="sync-badge" id="syncBadge" style="display:none;"></span>
             <button class="btn btn-ghost btn-icon" data-act="toggleSettings" title="تنظیمات" aria-label="تنظیمات">⚙️</button>
         </div>
       </div>
@@ -2204,7 +2245,7 @@
         </div>
         <div class="settings-section">
             <div class="settings-label">ℹ️ نسخه</div>
-            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v4.3 — محمد عباسی</div>
+            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v5.0 — محمد عباسی</div>
         </div>
     </div>
 
@@ -2726,14 +2767,35 @@
                 <button class="modal-close" data-act="close" data-arg="shareModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body" style="text-align: center;">
-                <div style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: var(--primary); margin-bottom: 18px; font-family: monospace;" id="shareCodeDisplay"></div>
-                <div class="banner info" style="text-align: right;">
-                    <span class="bn-icon">ℹ️</span>
-                    <span>این کد فقط روی <strong>همین دستگاه/مرورگر</strong> سفر را باز می‌کند. برای فرستادن سفر به دوستان یا دستگاه دیگر، از دکمه زیر فایل بگیرید و آن را بفرستید.</span>
+                <div style="font-size: 34px; font-weight: 900; letter-spacing: 10px; color: var(--primary); margin-bottom: 14px; font-family: monospace;" id="shareCodeDisplay"></div>
+
+                <div id="syncOffBlock">
+                    <div class="banner info" style="text-align: right;">
+                        <span class="bn-icon">ℹ️</span>
+                        <span>این کد فقط روی <strong>همین دستگاه</strong> سفر را باز می‌کند. برای اینکه دوستانتان روی گوشی خودشان همین سفر را ببینند و هزینه‌ها زنده به‌روز شود، همگام‌سازی را روشن کنید.</span>
+                    </div>
+                    <button class="btn btn-primary btn-lg" style="width:100%; margin-top:14px;" data-act="enableSync">
+                        ☁️ روشن کردن همگام‌سازی
+                    </button>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="btn btn-secondary" data-act="copyCode">📋 کپی کد</button>
+                        <button class="btn btn-outline" data-act="export">💾 فایل سفر</button>
+                    </div>
                 </div>
-                <div class="btn-group" style="margin-top: 14px;">
-                    <button class="btn btn-secondary" data-act="copyCode">📋 کپی کد</button>
-                    <button class="btn btn-primary" data-act="export">💾 فایل سفر</button>
+
+                <div id="syncOnBlock" style="display:none;">
+                    <div class="banner info" style="text-align: right;">
+                        <span class="bn-icon">🔗</span>
+                        <span>این لینک را برای هم‌سفرانتان بفرستید. هرکس بازش کند وارد همین سفر می‌شود و تغییرات هر دو طرف با هم ادغام می‌شود.
+                        <strong>هرکس لینک را داشته باشد دسترسی دارد</strong>، پس فقط برای هم‌سفران بفرستید.</span>
+                    </div>
+                    <div class="share-link" id="shareLinkBox"></div>
+                    <div class="btn-group" style="margin-top: 12px;">
+                        <button class="btn btn-primary" data-act="copyLink">📋 کپی لینک</button>
+                        <button class="btn btn-secondary" data-act="shareLink">📤 ارسال</button>
+                    </div>
+                    <button class="btn btn-outline btn-sm" style="width:100%; margin-top:10px;" data-act="syncNow">🔄 همگام‌سازی دستی</button>
+                    <button class="btn btn-ghost btn-sm" style="width:100%; margin-top:6px;" data-act="disableSync">قطع همگام‌سازی این سفر</button>
                 </div>
             </div>
         </div>
@@ -2825,7 +2887,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '4.3.0';
+    const APP_VERSION    = '5.0.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -3368,6 +3430,7 @@
 
     function saveToStorage() {
         if (!currentTrip) return true;
+        scheduleSync();
         // Safety net: any path that persists a change also drops the ledger memo,
         // so a forgotten touch() can never surface stale balances.
         _ledger = null;
@@ -3601,6 +3664,252 @@
     // FIX #24: the ledger is computed once per mutation instead of recomputing
     // every expense split for every member on every render.
     function touch() { _ledger = null; }
+
+
+    // ========== SYNC: MERGE ==========
+    // Record-level merge, never whole-trip replacement. Replacing wholesale
+    // silently destroys whatever the other device added between syncs.
+    function mergeLists(mine, theirs, tombMine, tombTheirs) {
+        const out = new Map();
+        const dead = new Map();
+        (tombMine || []).concat(tombTheirs || []).forEach(t => {
+            if (!t || !t.id) return;
+            const prev = dead.get(t.id) || 0;
+            if ((t.at || 0) > prev) dead.set(t.id, t.at || 0);
+        });
+        const consider = (rec) => {
+            if (!rec || !rec.id) return;
+            const killedAt = dead.get(rec.id);
+            const mod = rec.updatedAt || rec.createdAt || 0;
+            if (killedAt && killedAt >= mod) return;     // deletion is newer
+            const existing = out.get(rec.id);
+            if (!existing || (rec.updatedAt || 0) > (existing.updatedAt || 0)) out.set(rec.id, rec);
+        };
+        (mine || []).forEach(consider);
+        (theirs || []).forEach(consider);
+        return {
+            list: [...out.values()],
+            tombstones: [...dead.entries()].map(([id, at]) => ({ id: id, at: at }))
+        };
+    }
+
+    function mergeTrips(local, remote) {
+        if (!remote) return local;
+        if (!local) return remote;
+        const ex = mergeLists(local.expenses, remote.expenses, local.tombExpenses, remote.tombExpenses);
+        const pm = mergeLists(local.payments, remote.payments, local.tombPayments, remote.tombPayments);
+        const mb = mergeLists(local.members, remote.members, local.tombMembers, remote.tombMembers);
+        const newer = (remote.lastModified || 0) > (local.lastModified || 0) ? remote : local;
+
+        return Object.assign({}, local, {
+            name: newer.name, date: newer.date, currency: newer.currency, adminId: newer.adminId,
+            rates: Object.assign({}, remote.rates || {}, local.rates || {}),
+            members: mb.list,
+            expenses: ex.list.sort((a, b) => (a.spentAt || a.createdAt || 0) - (b.spentAt || b.createdAt || 0)),
+            payments: pm.list,
+            tombMembers: mb.tombstones, tombExpenses: ex.tombstones, tombPayments: pm.tombstones,
+            lastModified: Math.max(local.lastModified || 0, remote.lastModified || 0)
+        });
+    }
+
+    // ========== SYNC: TRANSPORT ==========
+    const SYNC_URL = 'https://safarino-sync.m-abbasi0812.workers.dev';
+    let syncState = 'off';        // off | idle | syncing | ok | error | offline
+    let syncTimer = null;
+    let syncInFlight = false;
+
+    // 22 url-safe characters (~131 bits). Deliberately not the 6-character trip
+    // code: that is short enough to enumerate, and it guards nothing locally.
+    function newSyncId() {
+        // One fresh byte per character. Drawing 22 characters from 16 bytes made
+        // the last six a copy of the first six, which both leaks structure and
+        // wastes entropy. 64 divides 256 evenly, so % is unbiased here.
+        const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        const bytes = new Uint8Array(22);
+        crypto.getRandomValues(bytes);
+        let out = '';
+        for (let i = 0; i < bytes.length; i++) out += alpha[bytes[i] % alpha.length];
+        return out;
+    }
+
+    function syncEnabled() { return !!(currentTrip && currentTrip.syncId); }
+
+    function setSyncState(s, detail) {
+        syncState = s;
+        const el = $('syncBadge');
+        if (!el) return;
+        const map = {
+            off:     ['', ''],
+            idle:    ['همگام', 'ok'],
+            syncing: ['در حال همگام‌سازی', 'busy'],
+            ok:      ['همگام شد', 'ok'],
+            error:   [detail || 'خطای همگام‌سازی', 'err'],
+            offline: ['آفلاین - بعداً همگام می‌شود', 'warn']
+        };
+        const [text, cls] = map[s] || ['', ''];
+        el.className = 'sync-badge' + (cls ? ' ' + cls : '');
+        el.textContent = text;
+        el.style.display = (s === 'off' || !text) ? 'none' : 'inline-flex';
+    }
+
+    // Photos live in IndexedDB and can be megabytes; they never go over the wire.
+    function tripForWire(trip) {
+        const copy = JSON.parse(JSON.stringify(trip));
+        (copy.expenses || []).forEach(e => { if (e.photoId) e.photoId = null; });
+        delete copy.syncId;                       // the id is the credential, not payload
+        return copy;
+    }
+
+    async function syncNow(reason) {
+        if (!syncEnabled() || syncInFlight) return;
+        if (!navigator.onLine) { setSyncState('offline'); return; }
+        syncInFlight = true;
+        setSyncState('syncing');
+        const id = currentTrip.syncId;
+        try {
+            // pull first so a merge happens before we overwrite the server copy
+            let remote = null;
+            const res = await fetch(SYNC_URL + '/trip/' + encodeURIComponent(id), { cache: 'no-store' });
+            if (res.ok) {
+                const body = await res.json();
+                remote = body && body.trip ? body.trip : null;
+            } else if (res.status !== 404) {
+                throw new Error('pull ' + res.status);
+            }
+
+            if (remote) {
+                const merged = mergeTrips(currentTrip, remote);
+                merged.syncId = id;
+                currentTrip = merged;
+                touch();
+                if (currentUser && !getMember(currentUser.id)) currentUser = null;
+                saveToStorage();
+                renderAll();
+            }
+
+            const put = await fetch(SYNC_URL + '/trip/' + encodeURIComponent(id), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trip: tripForWire(currentTrip) })
+            });
+            if (!put.ok) throw new Error('push ' + put.status);
+
+            setSyncState('ok');
+            setTimeout(() => { if (syncState === 'ok') setSyncState('idle'); }, 2500);
+        } catch (err) {
+            setSyncState(navigator.onLine ? 'error' : 'offline');
+        } finally {
+            syncInFlight = false;
+        }
+    }
+
+    // Coalesce bursts of edits into one round trip.
+    function scheduleSync(delay) {
+        if (!syncEnabled()) return;
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => syncNow('auto'), delay == null ? 1200 : delay);
+    }
+
+
+    // ========== SYNC: USER ACTIONS ==========
+    function shareLinkFor(trip) {
+        const base = location.origin + location.pathname;
+        return base + '#j=' + trip.syncId;
+    }
+
+    function refreshShareModal() {
+        const on = syncEnabled();
+        const off = $('syncOffBlock'), onB = $('syncOnBlock');
+        if (off) off.style.display = on ? 'none' : 'block';
+        if (onB) onB.style.display = on ? 'block' : 'none';
+        if (on) setText('shareLinkBox', shareLinkFor(currentTrip));
+    }
+
+    function enableSync() {
+        if (!currentTrip) return;
+        if (!requireAdmin()) return;
+        currentTrip.syncId = newSyncId();
+        currentTrip.lastModified = Date.now();
+        touch(); saveToStorage();
+        setSyncState('idle');
+        refreshShareModal();
+        showToast('همگام‌سازی روشن شد', 'success');
+        syncNow('enable');
+    }
+
+    function disableSync() {
+        if (!currentTrip || !requireAdmin()) return;
+        askConfirm('قطع همگام‌سازی',
+            'این دستگاه دیگر با بقیه همگام نمی‌شود. نسخه‌ای که روی سرور است پاک نمی‌شود و بقیه با لینک به کار خود ادامه می‌دهند. مطمئنید؟',
+            () => {
+                delete currentTrip.syncId;
+                touch(); saveToStorage();
+                setSyncState('off');
+                refreshShareModal();
+                showToast('همگام‌سازی قطع شد', 'info');
+            });
+    }
+
+    function copySyncLink() {
+        if (!syncEnabled()) return;
+        const link = shareLinkFor(currentTrip);
+        const done = () => showToast('لینک کپی شد', 'success');
+        if (navigator.clipboard) navigator.clipboard.writeText(link).then(done).catch(() => fallbackCopy(link, done));
+        else fallbackCopy(link, done);
+    }
+
+    function shareSyncLink() {
+        if (!syncEnabled()) return;
+        const link = shareLinkFor(currentTrip);
+        if (navigator.share) {
+            navigator.share({ title: 'سفرینو - ' + currentTrip.name,
+                              text: 'به سفر «' + currentTrip.name + '» بپیوند', url: link }).catch(() => {});
+        } else { copySyncLink(); }
+    }
+
+    // Someone opened a shared link: pull that trip and adopt it locally.
+    async function joinFromLink(syncId) {
+        setSyncState('syncing');
+        try {
+            const res = await fetch(SYNC_URL + '/trip/' + encodeURIComponent(syncId), { cache: 'no-store' });
+            if (res.status === 404) { showToast('این سفر روی سرور پیدا نشد', 'error', 5000); setSyncState('off'); return false; }
+            if (!res.ok) throw new Error('http ' + res.status);
+            const body = await res.json();
+            const clean = sanitizeTrip(body.trip);
+            if (!clean) { showToast('داده سفر معتبر نبود', 'error'); setSyncState('error'); return false; }
+
+            const incoming = clean.trip;
+            // if this device already holds a copy, merge rather than clobber it
+            const existing = loadFromStorage(incoming.code);
+            const trip = existing ? mergeTrips(existing, incoming) : incoming;
+            trip.syncId = syncId;
+            openTrip(trip, clean.issues);
+            saveToStorage();
+            setSyncState('ok');
+            scheduleSync(400);
+            return true;
+        } catch (e) {
+            showToast('اتصال به سرور ممکن نشد', 'error');
+            setSyncState('error');
+            return false;
+        }
+    }
+
+    // ===== SYNC BOOKKEEPING =====
+    // Merging two devices needs to know which edit is newer and which records
+    // were deliberately removed. Without a tombstone a peer that never saw the
+    // deletion simply pushes its stale copy back and the row reappears.
+    function stamp(rec) { if (rec) rec.updatedAt = Date.now(); return rec; }
+    function tombstone(kind, id) {
+        if (!currentTrip || !id) return;
+        const key = 'tomb' + kind;
+        if (!Array.isArray(currentTrip[key])) currentTrip[key] = [];
+        const at = Date.now();
+        const existing = currentTrip[key].find(t => t.id === id);
+        if (existing) existing.at = at; else currentTrip[key].push({ id: id, at: at });
+        // keep the list from growing without bound on a long trip
+        if (currentTrip[key].length > 400) currentTrip[key] = currentTrip[key].slice(-400);
+    }
 
     function getActiveMembers() {
         return currentTrip ? currentTrip.members.filter(m => m.active !== false) : [];
@@ -3988,6 +4297,8 @@
     function openTrip(trip, issues) {
         currentTrip = trip;
         touch();
+        setSyncState(trip.syncId ? 'idle' : 'off');
+        if (trip.syncId) scheduleSync(600);
         const known = resolveIdentity(trip);
         if (known) {
             currentUser = known;
@@ -4256,6 +4567,7 @@
     function shareTripCode() {
         if (!currentTrip) return;
         setText('shareCodeDisplay', currentTrip.code);
+        refreshShareModal();
         showModal('shareModal');
     }
     function copyTripCode() {
@@ -4313,7 +4625,7 @@
             id: generateId(), name: name.slice(0, 40), avatar: formAvatars.member,
             active: true, deviceId: selfJoin ? getDeviceId() : null, joinedAt: Date.now()
         };
-        currentTrip.members.push(member);
+        currentTrip.members.push(stamp(member));
         if (selfJoin) currentUser = member;
         touch();
         saveToStorage();
@@ -4394,6 +4706,7 @@
         const before = { name: member.name, avatar: member.avatar };
         member.name = name.slice(0, 40);
         member.avatar = formAvatars.editMember;
+        stamp(member);
         if (currentUser && currentUser.id === id) currentUser = member;
 
         touch(); saveToStorage(); hideModal('editMemberModal'); renderAll();
@@ -4408,6 +4721,7 @@
         if (!member) return;
         if (member.id === currentTrip.adminId) { showToast('مدیر قابل غیرفعال کردن نیست', 'error'); return; }
         member.active = member.active === false;
+        stamp(member);
         touch(); saveToStorage(); hideModal('memberDetailModal'); renderAll();
         showToast(member.active ? 'عضو فعال شد' : 'عضو غیرفعال شد. هزینه‌های قبلی حفظ می‌شوند.', 'success', 4000);
     }
@@ -4427,6 +4741,7 @@
         askConfirm('حذف عضو', '"' + member.name + '" حذف شود؟', () => {
             const idx = currentTrip.members.findIndex(m => m.id === member.id);
             const removed = currentTrip.members.splice(idx, 1)[0];
+            tombstone('Members', removed.id);
             touch(); saveToStorage(); hideModal('memberDetailModal'); renderAll();
             actionWithUndo('عضو حذف شد', 'حذف عضو', () => { currentTrip.members.splice(idx, 0, removed); });
         });
@@ -4731,6 +5046,7 @@
             editing.currency = currency;
             editing.rate = rate;
             editing.photoId = currentPhotoId;
+            stamp(editing);
 
             if (foreign) rememberRate(currency, rate);
             touch(); saveToStorage(); hideModal('expenseModal'); renderAll();
@@ -4755,7 +5071,7 @@
                 createdAt: Date.now(),
                 spentAt: spentAt
             };
-            currentTrip.expenses.push(expense);
+            currentTrip.expenses.push(stamp(expense));
             if (foreign) rememberRate(currency, rate);
             touch(); saveToStorage(); hideModal('expenseModal'); renderAll();
             actionWithUndo('هزینه ثبت شد', 'ثبت هزینه', () => {
@@ -4868,6 +5184,7 @@
         if (idx < 0) return;
         askConfirm('حذف هزینه', 'این هزینه حذف شود؟', () => {
             const removed = currentTrip.expenses.splice(idx, 1)[0];
+            tombstone('Expenses', removed.id);
             touch(); saveToStorage(); hideModal('expenseDetailModal'); renderAll();
             actionWithUndo('هزینه حذف شد', 'حذف هزینه', () => {
                 currentTrip.expenses.splice(idx, 0, removed);
@@ -4887,7 +5204,7 @@
         askConfirm('ثبت پرداخت',
             from.name + ' مبلغ ' + formatNumber(amt) + ' ' + getCurrency() + ' به ' + to.name + ' پرداخت کرد؟',
             () => {
-                const payment = { id: generateId(), from: fromId, to: toId, amount: amt, createdAt: Date.now() };
+                const payment = stamp({ id: generateId(), from: fromId, to: toId, amount: amt, createdAt: Date.now() });
                 if (!currentTrip.payments) currentTrip.payments = [];
                 currentTrip.payments.push(payment);
                 touch(); saveToStorage(); renderAll();
@@ -4904,6 +5221,7 @@
         if (idx < 0) return;
         askConfirm('حذف پرداخت', 'این پرداخت حذف شود؟ بدهی دوباره برمی‌گردد.', () => {
             const removed = currentTrip.payments.splice(idx, 1)[0];
+            tombstone('Payments', removed.id);
             touch(); saveToStorage(); renderAll();
             actionWithUndo('پرداخت حذف شد', 'حذف پرداخت', () => {
                 currentTrip.payments.splice(idx, 0, removed);
@@ -5610,6 +5928,11 @@
         leaveTrip:    () => leaveTrip(),
         share:        () => shareTripCode(),
         copyCode:     () => copyTripCode(),
+        enableSync:   () => enableSync(),
+        disableSync:  () => disableSync(),
+        copyLink:     () => copySyncLink(),
+        shareLink:    () => shareSyncLink(),
+        syncNow:      () => syncNow('manual'),
         export:       () => exportTrip(),
         importFile:   () => importTripFromFile(),
         print:        () => printReport(),
@@ -5658,6 +5981,14 @@
         if (name === 'settle') return;
         fn(el.dataset.arg, el, event);
     }
+
+    // Returning to the tab or regaining a connection is when the local copy is
+    // most likely stale, so reconcile at those moments rather than on a timer.
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && syncEnabled()) syncNow('visible');
+    });
+    window.addEventListener('online',  () => { if (syncEnabled()) syncNow('online'); });
+    window.addEventListener('offline', () => { if (syncEnabled()) setSyncState('offline'); });
 
     document.addEventListener('click', e => {
         // settle carries three data attributes rather than a single arg
@@ -5796,6 +6127,17 @@
         document.querySelectorAll('[data-icon]').forEach(el => {
             el.innerHTML = svgIcon(ICONS[el.dataset.icon] || ICONS.receipt, 20);
         });
+
+        // A shared link wins over reopening whatever was last used on this device.
+        const hash = (location.hash || '').match(/[#&]j=([A-Za-z0-9_-]{16,64})/);
+        if (hash) {
+            history.replaceState(null, '', location.pathname + location.search);
+            joinFromLink(hash[1]).then(ok => {
+                if (!ok) loadRecentTrips();
+                hideLoading();
+            });
+            return;
+        }
 
         // Reopen the most recent trip, but only if we can identify the visitor.
         const recent = readJSON(K_RECENT, []);
