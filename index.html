@@ -2426,6 +2426,161 @@
         [data-theme="pastel"] .top-bar,
         [data-theme="pastel"] .bottom-nav { background: rgba(255,255,255,.86); backdrop-filter: blur(16px); }
         [data-theme="pastel"] .settings-panel { background: #fff; }
+
+        /* ==========================================================
+           ======  v7 THEME IDENTITIES  =============================
+           Each theme owns a signature colour and its own atmosphere
+           rather than swapping a few tokens on a shared grey shell.
+           Layered radial fields give depth without clutter.
+           ========================================================== */
+
+        body {
+            background-attachment: fixed;
+            transition: background-color .35s var(--ease);
+        }
+
+        /* --- NIGHT: teal aurora over deep slate --- */
+        [data-theme="night"] body,
+        :root:not([data-theme]) body {
+            background:
+                radial-gradient(1200px 560px at 82% -10%, rgba(20,184,166,.20), transparent 60%),
+                radial-gradient(900px 480px at 8% 2%,   rgba(59,130,246,.14), transparent 58%),
+                var(--bg-primary);
+        }
+        [data-theme="night"] .trip-header {
+            background: linear-gradient(135deg, #2DD4BF 0%, #0D9488 45%, #155E75 100%);
+        }
+
+        /* --- DAY: crisp paper, cool light --- */
+        [data-theme="day"] body {
+            background:
+                radial-gradient(1000px 460px at 88% -6%, rgba(13,148,136,.10), transparent 60%),
+                radial-gradient(820px 420px at 4% 0%,   rgba(59,130,246,.08), transparent 56%),
+                var(--bg-primary);
+        }
+        [data-theme="day"] .trip-header {
+            background: linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0E7490 100%);
+        }
+
+        /* --- SUNSET: dusk over warm stone --- */
+        [data-theme="sunset"] body {
+            background:
+                radial-gradient(1200px 560px at 78% -8%, rgba(249,115,22,.22), transparent 62%),
+                radial-gradient(900px 460px at 6% 4%,    rgba(217,70,120,.16), transparent 58%),
+                var(--bg-primary);
+        }
+        [data-theme="sunset"] .trip-header {
+            background: linear-gradient(135deg, #FDBA74 0%, #F97316 42%, #B4326E 100%);
+        }
+
+        /* --- OCEAN: deep water, light from above --- */
+        [data-theme="ocean"] body {
+            background:
+                radial-gradient(1200px 600px at 50% -14%, rgba(56,189,248,.22), transparent 62%),
+                radial-gradient(900px 460px at 90% 30%,   rgba(29,78,216,.16), transparent 60%),
+                var(--bg-primary);
+        }
+        [data-theme="ocean"] .trip-header {
+            background: linear-gradient(135deg, #7DD3FC 0%, #0EA5E9 44%, #1E40AF 100%);
+        }
+
+        /* --- FOREST: canopy light through green --- */
+        [data-theme="forest"] body {
+            background:
+                radial-gradient(1100px 520px at 20% -8%, rgba(74,222,128,.20), transparent 60%),
+                radial-gradient(900px 480px at 92% 8%,   rgba(16,185,129,.14), transparent 58%),
+                var(--bg-primary);
+        }
+        [data-theme="forest"] .trip-header {
+            background: linear-gradient(135deg, #86EFAC 0%, #22C55E 44%, #14532D 100%);
+        }
+
+        /* --- PASTEL keeps its field, defined with the theme above --- */
+
+        /* ==========================================================
+           ======  HIERARCHY: money is the loudest thing  ===========
+           ========================================================== */
+
+        /* Financial figures align column to column, like a ledger. */
+        .stat-value, .expense-amount, .balance-amount, .pay-amount,
+        .day-total, .spender-amount, .settlement-arrow .amount,
+        .report-stat-row strong, .trip-progress-label, .dc-value {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum" 1;
+        }
+
+        /* The trip header carries the one number that matters at a glance. */
+        .trip-name { font-size: var(--fs-2xl); line-height: 1.25; }
+        .trip-total {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin: 10px 0 2px;
+            position: relative;
+            z-index: 1;
+        }
+        .trip-total-label {
+            font-size: var(--fs-sm);
+            opacity: .85;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-value { font-size: 20px; }
+        .stat-card { padding: 16px 12px; }
+
+        /* Generous, consistent rhythm - whitespace reads as care. */
+        .container { padding-block: var(--sp-4); }
+        .card { padding: var(--sp-5); margin-bottom: var(--sp-4); }
+        .stats-grid { gap: var(--sp-3); margin-bottom: var(--sp-5); }
+        .trip-header { padding: var(--sp-6) var(--sp-5); margin-bottom: var(--sp-5); }
+
+        /* ==========================================================
+           ======  MOTION: intentional, never decorative  ===========
+           ========================================================== */
+
+        /* A soft sheen crosses the header once on entry, so the most
+           important card feels alive without anything spinning. */
+        .trip-header::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.16) 50%, transparent 65%);
+            transform: translateX(-120%);
+            animation: sheen 1.5s var(--ease) .35s both;
+            pointer-events: none;
+        }
+        @keyframes sheen { to { transform: translateX(120%); } }
+
+        /* Balance bars grow from nothing so a glance shows the change. */
+        .balance-bar span { transition: width .55s var(--spring); }
+
+        /* Chart segments draw themselves in. */
+        .donut-seg { transition: stroke-dashoffset .7s var(--ease), opacity .18s var(--ease); }
+
+        /* Pressing anything gives a physical answer. */
+        .expense-item:active, .member-item:active,
+        .recent-trip-item:active, .pick-item:active { transform: scale(.985); }
+
+        /* The nav marker slides between tabs instead of blinking. */
+        .nav-item::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 50%;
+            width: 0; height: 3px;
+            background: var(--primary);
+            border-radius: 0 0 4px 4px;
+            transform: translateX(-50%);
+            transition: width .28s var(--spring);
+        }
+        .nav-item.active::before { width: 26px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .trip-header::after { animation: none; opacity: 0; }
+            .balance-bar span, .donut-seg, .nav-item::before { transition: none; }
+        }
     </style>
 </head>
 <body>
@@ -2516,6 +2671,8 @@
         <div class="container" style="padding-top: calc(70px + var(--safe-top));">
             <div class="trip-header">
                 <h1 class="trip-name" id="tripNameDisplay">سفر</h1>
+                <div class="trip-total" id="tripTotalDisplay">۰</div>
+                <div class="trip-total-label" id="tripTotalLabel">کل هزینه‌های سفر</div>
                 <div class="trip-info">
                     <span><i data-ic="people"></i> <span id="memberCountDisplay">۰</span> نفر</span>
                     <span><i data-ic="calendar"></i> <span id="tripDateDisplay">-</span></span>
@@ -3245,7 +3402,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '6.1.0';
+    const APP_VERSION    = '7.0.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -5645,6 +5802,9 @@
         const active = getActiveMembers();
 
         setText('tripNameDisplay', currentTrip.name);
+        const grand = currentTrip.expenses.reduce((sum, e) => sum + baseAmount(e), 0);
+        setHTML('tripTotalDisplay', ltrNum(formatNumber(grand)) + ' <span style="font-size:16px;opacity:.8">' +
+                esc(tripCurrency()) + '</span>');
         setText('memberCountDisplay', toPersian(active.length));
         setText('tripDateDisplay', currentTrip.date);
         setText('tripCodeSmall', currentTrip.code);
