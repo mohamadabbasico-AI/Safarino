@@ -3,7 +3,7 @@
    always failed and there was never any offline support. This is a real
    same-origin worker with a cache-first strategy for the app shell. */
 
-const CACHE = 'safarino-v5.0.0';
+const CACHE = 'safarino-v6.0.0';
 
 const SHELL = [
   './',
@@ -37,7 +37,27 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   const sameOrigin = url.origin === self.location.origin;
 
-  // App shell: cache first, fall back to network, then to the cached index.
+  // The HTML document is network-first. Cache-first left every returning
+  // visitor exactly one reload behind: the old worker served the stale page
+  // while the new worker installed in the background, so a shipped fix only
+  // appeared on the *next* visit. Falling back to cache keeps offline working.
+  const isDocument = req.mode === 'navigate' ||
+                     (req.headers.get('accept') || '').indexOf('text/html') >= 0;
+
+  if (sameOrigin && isDocument) {
+    event.respondWith(
+      fetch(req).then(res => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+        }
+        return res;
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Everything else same-origin: cache first, it is versioned by CACHE name.
   if (sameOrigin) {
     event.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {

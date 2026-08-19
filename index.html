@@ -2203,12 +2203,221 @@
             margin-top: 12px;
             color: var(--text-secondary);
         }
+
+        /* ==========================================================
+           ============  v6 DESIGN SYSTEM  ==========================
+           A single scale for type, space, radius and elevation, so
+           components stop inventing their own values.
+           ========================================================== */
+        :root {
+            --fs-xs: 11.5px; --fs-sm: 12.5px; --fs-md: 14px;
+            --fs-lg: 16px;   --fs-xl: 19px;   --fs-2xl: 23px; --fs-3xl: 30px;
+
+            --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+            --sp-5: 20px; --sp-6: 26px; --sp-7: 34px;
+
+            --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 26px; --r-full: 999px;
+
+            --e-1: 0 1px 2px rgba(16,24,40,.05);
+            --e-2: 0 2px 6px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+            --e-3: 0 10px 28px -14px rgba(16,24,40,.28), 0 2px 6px rgba(16,24,40,.05);
+            --e-4: 0 22px 48px -20px rgba(16,24,40,.38);
+
+            --ease: cubic-bezier(.4,0,.2,1);
+            --spring: cubic-bezier(.34,1.4,.5,1);
+        }
+
+        /* ---------- PASTEL THEME ---------- */
+        [data-theme="pastel"] {
+            --primary:       #E9779F;
+            --primary-light: #F79BBB;
+            --primary-dark:  #CE5A83;
+            --primary-glow:  rgba(233,119,159,.30);
+            --secondary:     #9C8BE0;
+
+            --success:    #4FB286;  --success-bg: rgba(79,178,134,.14);
+            --danger:     #E5677E;  --danger-bg:  rgba(229,103,126,.14);
+            --warning:    #E0A33C;  --warning-bg: rgba(224,163,60,.16);
+            --info:       #7C93E8;  --info-bg:    rgba(124,147,232,.14);
+
+            --bg-primary:   #FFF6FA;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary:  #FDEDF4;
+            --bg-hover:     #FBE0EC;
+
+            --text-primary:   #4A2C3A;
+            --text-secondary: #7A5566;
+            --text-muted:     #9C7285;
+
+            --glass:        rgba(233,119,159,.07);
+            --glass-border: rgba(233,119,159,.18);
+            --glass-hover:  rgba(233,119,159,.13);
+            --card-border:  rgba(233,119,159,.16);
+
+            --shadow:    0 4px 20px rgba(206,90,131,.10);
+            --shadow-lg: 0 16px 44px rgba(206,90,131,.16);
+        }
+        [data-theme="pastel"] body {
+            background:
+                radial-gradient(1100px 520px at 88% -8%,  rgba(247,155,187,.20), transparent 62%),
+                radial-gradient(900px 460px at 6% 4%,     rgba(156,139,224,.16), transparent 58%),
+                var(--bg-primary);
+            background-attachment: fixed;
+        }
+        [data-theme="pastel"] .trip-header {
+            background: linear-gradient(135deg, #F79BBB 0%, #E9779F 48%, #B98BE0 100%);
+        }
+        [data-theme="pastel"] .card { border-color: var(--card-border); }
+        [data-theme="pastel"] .expense-item,
+        [data-theme="pastel"] .member-item { background: #FFF9FC; border-color: rgba(233,119,159,.14); }
+        [data-theme="pastel"] .nav-add { box-shadow: 0 8px 22px -6px rgba(233,119,159,.55); }
+
+        /* ---------- ICONS ---------- */
+        .ic { display: block; flex-shrink: 0; }
+        i[data-ic] { display: inline-flex; align-items: center; justify-content: center;
+                     vertical-align: -0.22em; margin-inline-end: 6px; color: currentColor; opacity: .9; }
+        .btn i[data-ic], .nav-item i[data-ic] { margin-inline-end: 0; }
+        .card-title i[data-ic] { color: var(--primary); opacity: 1; }
+        .form-label i[data-ic] { color: var(--text-muted); }
+        .modal-title i[data-ic] { color: var(--primary); }
+        .inline-ic, .inline-av { display: inline-flex; align-items: center; gap: 6px; }
+        .inline-ic { color: var(--cat, var(--text-secondary)); }
+        .inline-ic .ic { color: var(--cat, currentColor); }
+
+        /* ---------- AVATARS ---------- */
+        .av { display: block; border-radius: 50%; flex-shrink: 0; }
+        .member-avatar, .balance-avatar, .spender-avatar,
+        .pk-avatar, .settlement-person .avatar, .detail-avatar,
+        .custom-split-item .avatar, .weight-item .avatar { font-size: 0; line-height: 0; }
+        .detail-avatar { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
+        .detail-avatar .av { box-shadow: var(--e-3); }
+        .chk-row { display: inline-flex; align-items: center; gap: 9px; }
+
+        .avatar-grid { grid-template-columns: repeat(6, 1fr); gap: 9px; }
+        .avatar-option {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            background: var(--bg-tertiary); border: 2px solid transparent;
+            border-radius: var(--r-md); padding: 4px; cursor: pointer;
+            transition: transform .22s var(--spring), border-color .15s var(--ease), background .15s var(--ease);
+        }
+        .avatar-option .av { width: 100%; height: auto; }
+        .avatar-option:hover { background: var(--bg-hover); }
+        .avatar-option.selected {
+            border-color: var(--primary); background: var(--glass);
+            transform: scale(1.07); box-shadow: var(--e-2);
+        }
+
+        /* ---------- CATEGORY TILES ---------- */
+        .category-option .icon {
+            width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; background: color-mix(in srgb, var(--cat) 14%, transparent);
+            color: var(--cat); transition: transform .2s var(--spring);
+        }
+        .category-option.selected .icon { transform: scale(1.08); }
+        .category-option.selected {
+            border-color: var(--cat); background: color-mix(in srgb, var(--cat) 9%, transparent);
+        }
+        .detail-cat {
+            width: 60px; height: 60px; margin: 0 auto var(--sp-3);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 18px; color: var(--cat);
+            background: color-mix(in srgb, var(--cat) 14%, transparent);
+        }
+        .expense-icon { border-radius: 13px; }
+        .filter-chip { display: inline-flex; align-items: center; gap: 6px; }
+        .filter-chip .ic { opacity: .85; }
+
+        /* ---------- COMPONENT POLISH ---------- */
+        .btn {
+            gap: 7px; font-weight: 700; letter-spacing: -.1px;
+            transition: transform .18s var(--spring), box-shadow .18s var(--ease),
+                        background .15s var(--ease), opacity .15s var(--ease);
+        }
+        .btn:active { transform: scale(.965); }
+        .btn-primary { box-shadow: 0 6px 18px -6px var(--primary-glow); }
+        .btn-primary:hover { box-shadow: 0 9px 24px -6px var(--primary-glow); }
+        .btn-lg { padding: 15px 26px; font-size: var(--fs-lg); border-radius: var(--r-full); }
+
+        .card {
+            border-radius: var(--r-lg);
+            box-shadow: var(--e-2);
+            transition: box-shadow .22s var(--ease), border-color .22s var(--ease);
+        }
+        .card:hover { box-shadow: var(--e-3); }
+        .card-title { font-size: var(--fs-md); gap: 7px; letter-spacing: -.2px; }
+        .card-badge { font-variant-numeric: tabular-nums; }
+
+        .modal-content { border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--e-4); }
+        .modal-center .modal-content { border-radius: var(--r-xl); }
+        .modal-title { font-size: var(--fs-lg); display: flex; align-items: center; gap: 7px; }
+        .modal-close {
+            width: 34px; height: 34px; border-radius: 50%;
+            transition: background .15s var(--ease), transform .18s var(--spring);
+        }
+        .modal-close:active { transform: scale(.9); }
+
+        .form-input {
+            border-radius: var(--r-md);
+            transition: border-color .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease);
+        }
+        .form-input:focus { box-shadow: 0 0 0 4px var(--primary-glow); }
+        .form-label { font-size: var(--fs-sm); letter-spacing: -.1px; }
+
+        .stat-card {
+            border-radius: var(--r-lg);
+            transition: transform .2s var(--spring), box-shadow .2s var(--ease);
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--e-3); }
+        .stat-value { letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+
+        .expense-item, .member-item, .payment-item, .settlement-item, .recent-trip-item {
+            border-radius: var(--r-md);
+            transition: transform .16s var(--ease), border-color .16s var(--ease), background .16s var(--ease);
+        }
+        .expense-item:hover, .member-item:hover, .recent-trip-item:hover {
+            transform: translateX(-2px); border-color: var(--glass-border);
+        }
+        .expense-amount, .balance-amount, .stat-value, .pay-amount,
+        .day-total, .spender-amount { font-variant-numeric: tabular-nums; }
+
+        .nav-item { transition: color .15s var(--ease); }
+        .nav-item .ic { transition: transform .24s var(--spring); }
+        .nav-item.active .ic { transform: translateY(-1px) scale(1.12); }
+        .nav-add { transition: transform .2s var(--spring), box-shadow .2s var(--ease); }
+        .nav-add:active { transform: scale(.9); }
+
+        .theme-option { transition: transform .2s var(--spring), border-color .15s var(--ease); }
+        .theme-option:active { transform: scale(.88); }
+
+        /* entrance motion, disabled for reduced-motion users by the rule below */
+        @keyframes riseIn { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+        .screen.active > .container > * { animation: riseIn .34s var(--ease) both; }
+        .screen.active > .container > *:nth-child(1) { animation-delay: .01s; }
+        .screen.active > .container > *:nth-child(2) { animation-delay: .05s; }
+        .screen.active > .container > *:nth-child(3) { animation-delay: .09s; }
+        .screen.active > .container > *:nth-child(4) { animation-delay: .13s; }
+        .screen.active > .container > *:nth-child(5) { animation-delay: .17s; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .screen.active > .container > * { animation: none !important; }
+        }
+
+        /* ---------- THEME SWATCHES ---------- */
+        .theme-options { grid-template-columns: repeat(6, 1fr); gap: 7px; }
+        .theme-option { padding: 0; overflow: hidden; }
+        .sw { width: 100%; height: 100%; border-radius: 9px; display: block; }
+        .sw-night  { background: linear-gradient(140deg, #334155, #0F172A); }
+        .sw-pastel { background: linear-gradient(140deg, #F79BBB, #B98BE0); }
+        .sw-day    { background: linear-gradient(140deg, #FFFFFF, #CBD5E1); }
+        .sw-sunset { background: linear-gradient(140deg, #FB923C, #7C2D12); }
+        .sw-ocean  { background: linear-gradient(140deg, #38BDF8, #0C4A6E); }
+        .sw-forest { background: linear-gradient(140deg, #4ADE80, #14532D); }
     </style>
 </head>
 <body>
     <!-- Loading -->
     <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-logo">🏖️</div>
+        <div class="loading-logo"></div>
         <div class="loading-bar"></div>
         <div class="loading-text">در حال بارگذاری...</div>
     </div>
@@ -2221,12 +2430,12 @@
       <div class="top-bar-inner">
         <div class="top-bar-right">
             <button class="back-btn" id="backBtn" data-act="goBack" title="بازگشت" aria-label="بازگشت">→</button>
-            <span class="brand"><span class="brand-mark" aria-hidden="true">🏖️</span><span class="top-bar-title">سفرینو</span></span>
+            <span class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="top-bar-title">سفرینو</span></span>
         </div>
         <div class="top-bar-actions">
-            <button class="btn btn-ghost btn-icon" id="importExportBtn" data-act="modal" data-arg="importExportModal" style="display:none;" title="ورود/خروج داده" aria-label="ورود و خروج داده">📦</button>
+            <button class="btn btn-ghost btn-icon" id="importExportBtn" data-act="modal" data-arg="importExportModal" style="display:none;" title="ورود/خروج داده" aria-label="ورود و خروج داده"><i data-ic="box"></i></button>
             <span class="sync-badge" id="syncBadge" style="display:none;"></span>
-            <button class="btn btn-ghost btn-icon" data-act="toggleSettings" title="تنظیمات" aria-label="تنظیمات">⚙️</button>
+            <button class="btn btn-ghost btn-icon" data-act="toggleSettings" title="تنظیمات" aria-label="تنظیمات"><i data-ic="settings"></i></button>
         </div>
       </div>
     </header>
@@ -2234,44 +2443,45 @@
     <!-- Settings Panel -->
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-section">
-            <div class="settings-label">🎨 تم</div>
+            <div class="settings-label">تم</div>
             <div class="theme-options">
-                <button class="theme-option active" data-theme="night" data-act="theme" data-arg="night" title="شب">🌙</button>
-                <button class="theme-option" data-theme="day" data-act="theme" data-arg="day" title="روز">☀️</button>
-                <button class="theme-option" data-theme="sunset" data-act="theme" data-arg="sunset" title="غروب">🌅</button>
-                <button class="theme-option" data-theme="ocean" data-act="theme" data-arg="ocean" title="اقیانوس">🌊</button>
-                <button class="theme-option" data-theme="forest" data-act="theme" data-arg="forest" title="جنگل">🌲</button>
+                <button class="theme-option active" data-theme="night"  data-act="theme" data-arg="night"  title="شب"      aria-label="تم شب"><span class="sw sw-night"></span></button>
+                <button class="theme-option" data-theme="pastel" data-act="theme" data-arg="pastel" title="پاستیلی" aria-label="تم پاستیلی"><span class="sw sw-pastel"></span></button>
+                <button class="theme-option" data-theme="day"    data-act="theme" data-arg="day"    title="روز"     aria-label="تم روز"><span class="sw sw-day"></span></button>
+                <button class="theme-option" data-theme="sunset" data-act="theme" data-arg="sunset" title="غروب"    aria-label="تم غروب"><span class="sw sw-sunset"></span></button>
+                <button class="theme-option" data-theme="ocean"  data-act="theme" data-arg="ocean"  title="اقیانوس"  aria-label="تم اقیانوس"><span class="sw sw-ocean"></span></button>
+                <button class="theme-option" data-theme="forest" data-act="theme" data-arg="forest" title="جنگل"    aria-label="تم جنگل"><span class="sw sw-forest"></span></button>
             </div>
         </div>
         <div class="settings-section">
             <div class="settings-label">ℹ️ نسخه</div>
-            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v5.0 — محمد عباسی</div>
+            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v6.0 — محمد عباسی</div>
         </div>
     </div>
 
     <!-- ========== WELCOME SCREEN ========== -->
     <div id="welcomeScreen" class="screen active">
         <div class="container" style="padding-top: calc(80px + var(--safe-top)); text-align: center;">
-            <div class="hero-logo">🏖️</div>
+            <div class="hero-logo"></div>
             <h1 style="font-size: 34px; font-weight: 900; margin-bottom: 6px; letter-spacing: -0.5px;">سفرینو</h1>
             <p style="color: var(--text-muted); font-size: 15px;">حساب‌وکتاب سفر، بدون دردسر</p>
 
             <div class="hero-features">
-                <div class="hero-feature"><span class="hf-icon">🧾</span><span>ثبت هزینه</span></div>
-                <div class="hero-feature"><span class="hf-icon">⚖️</span><span>تقسیم دقیق</span></div>
-                <div class="hero-feature"><span class="hf-icon">💸</span><span>تسویه آسان</span></div>
-                <div class="hero-feature"><span class="hf-icon">📊</span><span>گزارش کامل</span></div>
+                <div class="hero-feature"><span class="hf-icon"><i data-ic="receipt"></i></span><span>ثبت هزینه</span></div>
+                <div class="hero-feature"><span class="hf-icon"><i data-ic="scale"></i></span><span>تقسیم دقیق</span></div>
+                <div class="hero-feature"><span class="hf-icon"><i data-ic="wallet"></i></span><span>تسویه آسان</span></div>
+                <div class="hero-feature"><span class="hf-icon"><i data-ic="chart"></i></span><span>گزارش کامل</span></div>
             </div>
 
             <div style="margin-bottom: 24px;">
                 <button class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 12px;" data-act="modal" data-arg="createTripModal">
-                    ✨ ایجاد سفر جدید
+                    <i data-ic="plus"></i> ایجاد سفر جدید
                 </button>
                 <button class="btn btn-outline btn-lg" style="width: 100%; margin-bottom: 12px;" data-act="modal" data-arg="joinTripModal">
-                    🔗 پیوستن به سفر
+                    <i data-ic="link"></i> پیوستن به سفر
                 </button>
                 <button class="btn btn-secondary btn-lg" style="width: 100%;" data-act="importFile">
-                    📥 بارگذاری فایل سفر
+                    <i data-ic="upload"></i> بارگذاری فایل سفر
                 </button>
             </div>
 
@@ -2281,7 +2491,7 @@
             </div>
 
             <div class="footer-credit">
-                <p>طراحی و توسعه با ❤️</p>
+                <p>طراحی و توسعه با </p>
                 <p><strong>محمد عباسی</strong></p>
             </div>
         </div>
@@ -2293,8 +2503,8 @@
             <div class="trip-header">
                 <h1 class="trip-name" id="tripNameDisplay">سفر</h1>
                 <div class="trip-info">
-                    <span>👥 <span id="memberCountDisplay">۰</span> نفر</span>
-                    <span>📅 <span id="tripDateDisplay">-</span></span>
+                    <span><i data-ic="people"></i> <span id="memberCountDisplay">۰</span> نفر</span>
+                    <span><i data-ic="calendar"></i> <span id="tripDateDisplay">-</span></span>
                     <span class="trip-code-display" id="tripCodeSmall"></span>
                 </div>
                 <div class="trip-progress"><span id="tripProgressBar" style="width:0%"></span></div>
@@ -2303,9 +2513,9 @@
                     <span id="tripProgressPct"></span>
                 </div>
                 <div class="trip-actions">
-                    <button class="btn" data-act="share">📤 اشتراک</button>
-                    <button class="btn" data-act="export">💾 خروجی</button>
-                    <button class="btn admin-only" data-act="modal" data-arg="editTripModal">✏️ ویرایش</button>
+                    <button class="btn" data-act="share"><i data-ic="share"></i> اشتراک</button>
+                    <button class="btn" data-act="export"><i data-ic="download"></i> خروجی</button>
+                    <button class="btn admin-only" data-act="modal" data-arg="editTripModal"><i data-ic="edit"></i> ویرایش</button>
                 </div>
             </div>
 
@@ -2336,14 +2546,14 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">📊 وضعیت اعضا</h3>
+                    <h3 class="card-title"><i data-ic="chart"></i> وضعیت اعضا</h3>
                 </div>
                 <div id="quickBalanceList"></div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">🕐 آخرین هزینه‌ها</h3>
+                    <h3 class="card-title"><i data-ic="calendar"></i> آخرین هزینه‌ها</h3>
                     <button class="btn btn-sm btn-outline" data-act="tab" data-arg="expenses">همه</button>
                 </div>
                 <div id="recentExpensesList"></div>
@@ -2360,12 +2570,12 @@
         <div class="container" style="padding-top: calc(70px + var(--safe-top));">
             <div class="search-bar">
                 <input type="text" id="expenseSearch" placeholder="جستجوی هزینه..." aria-label="جستجوی هزینه">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"><i data-ic="search"></i></span>
             </div>
             <div class="filter-chips" id="filterChips"></div>
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">🧾 لیست هزینه‌ها</h3>
+                    <h3 class="card-title"><i data-ic="receipt"></i> لیست هزینه‌ها</h3>
                     <span class="card-badge" id="expensesBadge">۰</span>
                 </div>
                 <div id="expensesList"></div>
@@ -2378,7 +2588,7 @@
         <div class="container" style="padding-top: calc(70px + var(--safe-top));">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">👥 اعضای سفر</h3>
+                    <h3 class="card-title"><i data-ic="people"></i> اعضای سفر</h3>
                     <button class="btn btn-sm btn-primary admin-only" data-act="modal" data-arg="addMemberModal">+ عضو</button>
                 </div>
                 <div id="membersList"></div>
@@ -2387,14 +2597,14 @@
             <div class="grid-2">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">💸 تسویه حساب</h3>
+                        <h3 class="card-title"><i data-ic="wallet"></i> تسویه حساب</h3>
                     </div>
                     <div id="settlementList"></div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🧾 پرداخت‌های ثبت‌شده</h3>
+                        <h3 class="card-title"><i data-ic="receipt"></i> پرداخت‌های ثبت‌شده</h3>
                         <span class="card-badge" id="paymentsBadge">۰</span>
                     </div>
                     <div id="paymentsList"></div>
@@ -2408,7 +2618,7 @@
         <div class="container" style="padding-top: calc(70px + var(--safe-top));">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">📊 نمودار هزینه‌ها</h3>
+                    <h3 class="card-title"><i data-ic="chart"></i> نمودار هزینه‌ها</h3>
                 </div>
                 <div class="chart-container" id="chartContainer"></div>
             </div>
@@ -2416,21 +2626,21 @@
             <div class="grid-2">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📈 آمار کلی</h3>
+                        <h3 class="card-title"><i data-ic="chart"></i> آمار کلی</h3>
                     </div>
                     <div id="reportStats"></div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🏆 بیشترین پرداخت</h3>
+                        <h3 class="card-title"><i data-ic="trophy"></i> بیشترین پرداخت</h3>
                     </div>
                     <div id="topSpenders"></div>
                 </div>
             </div>
 
             <button class="btn btn-primary btn-lg" style="width: 100%; margin-top: 16px;" data-act="print">
-                🖨️ گزارش PDF / چاپ
+                <i data-ic="print"></i> گزارش PDF / چاپ
             </button>
             <p class="form-hint" style="text-align:center; margin-top:10px;">
                 در پنجره چاپ، مقصد را روی «ذخیره به‌صورت PDF» بگذارید.
@@ -2439,25 +2649,25 @@
     </div>
 
     <!-- FAB -->
-    <button class="fab" id="fabBtn" data-act="newExpense" title="هزینه جدید" aria-label="هزینه جدید">➕</button>
+    <button class="fab" id="fabBtn" data-act="newExpense" title="هزینه جدید" aria-label="هزینه جدید"><i data-ic="plus"></i></button>
 
     <!-- Bottom Nav -->
     <nav class="bottom-nav" id="bottomNav">
       <div class="bottom-nav-inner">
         <button class="nav-item active" data-tab="home" data-act="tab" data-arg="home">
-            <span class="icon">🏠</span><span>خانه</span>
+            <span class="icon"><i data-ic="home"></i></span><span>خانه</span>
         </button>
         <button class="nav-item" data-tab="expenses" data-act="tab" data-arg="expenses">
-            <span class="icon">🧾</span><span>هزینه‌ها</span>
+            <span class="icon"><i data-ic="receipt"></i></span><span>هزینه‌ها</span>
         </button>
         <button class="nav-add" id="navAddBtn" style="display:none;" data-act="newExpense" title="هزینه جدید" aria-label="ثبت هزینه جدید">
             <span class="na-plus" aria-hidden="true">+</span>
         </button>
         <button class="nav-item" data-tab="members" data-act="tab" data-arg="members">
-            <span class="icon">👥</span><span>اعضا</span>
+            <span class="icon"><i data-ic="people"></i></span><span>اعضا</span>
         </button>
         <button class="nav-item" data-tab="reports" data-act="tab" data-arg="reports">
-            <span class="icon">📊</span><span>گزارش</span>
+            <span class="icon"><i data-ic="chart"></i></span><span>گزارش</span>
         </button>
       </div>
     </nav>
@@ -2469,20 +2679,20 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">✨ ایجاد سفر جدید</h3>
+                <h3 class="modal-title"><i data-ic="plus"></i> ایجاد سفر جدید</h3>
                 <button class="modal-close" data-act="close" data-arg="createTripModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label" for="newTripName">🏷️ نام سفر <span class="required">*</span></label>
+                    <label class="form-label" for="newTripName"><i data-ic="other"></i> نام سفر <span class="required">*</span></label>
                     <input type="text" class="form-input" id="newTripName" placeholder="مثلاً: سفر شمال" maxlength="50">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="newTripDate">📅 تاریخ</label>
+                    <label class="form-label" for="newTripDate"><i data-ic="calendar"></i> تاریخ</label>
                     <input type="text" class="form-input" id="newTripDate" placeholder="مثلاً: ۱۵ دی ۱۴۰۳" maxlength="40">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="newTripCurrency">💲 واحد پول</label>
+                    <label class="form-label" for="newTripCurrency"><i data-ic="money"></i> واحد پول</label>
                     <select class="form-input form-select" id="newTripCurrency">
                         <option value="تومان">تومان</option>
                         <option value="ریال">ریال</option>
@@ -2491,16 +2701,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="adminName">👤 نام شما <span class="required">*</span></label>
+                    <label class="form-label" for="adminName"><i data-ic="person"></i> نام شما <span class="required">*</span></label>
                     <input type="text" class="form-input" id="adminName" placeholder="نام شما" maxlength="30">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">😊 آواتار</label>
+                    <label class="form-label"><i data-ic="person"></i> آواتار</label>
                     <div class="avatar-grid" id="adminAvatarGrid" data-avatar-grid="create"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="createTrip">🚀 ایجاد سفر</button>
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="createTrip"><i data-ic="plus"></i> ایجاد سفر</button>
             </div>
         </div>
     </div>
@@ -2510,7 +2720,7 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">🔗 پیوستن به سفر</h3>
+                <h3 class="modal-title"><i data-ic="link"></i> پیوستن به سفر</h3>
                 <button class="modal-close" data-act="close" data-arg="joinTripModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
@@ -2519,20 +2729,20 @@
                     <span>کد سفر فقط روی <strong>همین دستگاه</strong> کار می‌کند، چون سفرینو داده‌ها را محلی نگه می‌دارد و سروری ندارد. برای انتقال سفر به دستگاه دیگر، از <strong>خروجی فایل JSON</strong> استفاده کنید.</span>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="joinTripCode">🔑 کد سفر <span class="required">*</span></label>
+                    <label class="form-label" for="joinTripCode"><i data-ic="link"></i> کد سفر <span class="required">*</span></label>
                     <input type="text" class="form-input" id="joinTripCode" placeholder="کد ۶ رقمی" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:800;" maxlength="6" autocapitalize="characters">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="joinMemberName">👤 نام شما <span class="required">*</span></label>
+                    <label class="form-label" for="joinMemberName"><i data-ic="person"></i> نام شما <span class="required">*</span></label>
                     <input type="text" class="form-input" id="joinMemberName" placeholder="نام شما" maxlength="30">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">😊 آواتار</label>
+                    <label class="form-label"><i data-ic="person"></i> آواتار</label>
                     <div class="avatar-grid" id="joinAvatarGrid" data-avatar-grid="join"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="joinTrip">🎉 پیوستن</button>
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="joinTrip"><i data-ic="check"></i> پیوستن</button>
             </div>
         </div>
     </div>
@@ -2542,24 +2752,24 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">✏️ ویرایش سفر</h3>
+                <h3 class="modal-title"><i data-ic="edit"></i> ویرایش سفر</h3>
                 <button class="modal-close" data-act="close" data-arg="editTripModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label" for="editTripName">🏷️ نام سفر</label>
+                    <label class="form-label" for="editTripName"><i data-ic="other"></i> نام سفر</label>
                     <input type="text" class="form-input" id="editTripName" maxlength="50">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="editTripDate">📅 تاریخ</label>
+                    <label class="form-label" for="editTripDate"><i data-ic="calendar"></i> تاریخ</label>
                     <input type="text" class="form-input" id="editTripDate" maxlength="40">
                 </div>
-                <div class="divider">⚠️ منطقه خطر</div>
-                <button class="btn btn-danger" style="width: 100%;" data-act="confirmDeleteTrip">🗑️ حذف کامل سفر</button>
-                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" data-act="leaveTrip">🚪 خروج از سفر (داده حفظ می‌شود)</button>
+                <div class="divider"><i data-ic="warn"></i> منطقه خطر</div>
+                <button class="btn btn-danger" style="width: 100%;" data-act="confirmDeleteTrip"><i data-ic="trash"></i> حذف کامل سفر</button>
+                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" data-act="leaveTrip"><i data-ic="back"></i> خروج از سفر (داده حفظ می‌شود)</button>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="saveTrip">💾 ذخیره</button>
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="saveTrip"><i data-ic="download"></i> ذخیره</button>
             </div>
         </div>
     </div>
@@ -2569,13 +2779,13 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title" id="expenseModalTitle">➕ هزینه جدید</h3>
+                <h3 class="modal-title" id="expenseModalTitle"><i data-ic="plus"></i> هزینه جدید</h3>
                 <button class="modal-close" data-act="close" data-arg="expenseModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="expenseEditId">
                 <div class="form-group">
-                    <label class="form-label" for="expenseTitle">📝 عنوان <span class="required">*</span></label>
+                    <label class="form-label" for="expenseTitle"><i data-ic="edit"></i> عنوان <span class="required">*</span></label>
                     <input type="text" class="form-input" id="expenseTitle" placeholder="مثلاً: ناهار رستوران" maxlength="60">
                 </div>
                 <div class="form-group">
@@ -2589,7 +2799,7 @@
                     <div class="form-hint" id="expenseDateHint"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="expenseAmount">💵 مبلغ <span class="required">*</span>
+                    <label class="form-label" for="expenseAmount"><i data-ic="money"></i> مبلغ <span class="required">*</span>
                         <span id="currencyLabel" style="font-weight:400; color: var(--text-muted); font-size:12px;">(تومان)</span>
                     </label>
                     <input type="text" class="form-input" id="expenseAmount" placeholder="۰" inputmode="numeric" autocomplete="off">
@@ -2603,11 +2813,11 @@
                     <div class="form-hint" id="rateHint"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">🏷️ دسته‌بندی</label>
+                    <label class="form-label"><i data-ic="other"></i> دسته‌بندی</label>
                     <div class="category-grid" id="categoryGrid" data-category-grid="1"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="expensePayer">💳 پرداخت‌کننده</label>
+                    <label class="form-label" for="expensePayer"><i data-ic="wallet"></i> پرداخت‌کننده</label>
                     <select class="form-input form-select" id="expensePayer"></select>
                 </div>
                 <div class="form-group">
@@ -2622,7 +2832,7 @@
                     <input type="text" class="form-input" id="expenseNote" placeholder="مثلاً: بدون نوشیدنی" maxlength="120">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">👥 تقسیم بین</label>
+                    <label class="form-label"><i data-ic="people"></i> تقسیم بین</label>
                     <div class="split-toggle">
                         <button type="button" class="split-toggle-btn active" data-split="equal" data-act="splitType" data-arg="equal">مساوی</button>
                         <button type="button" class="split-toggle-btn" data-split="shares" data-act="splitType" data-arg="shares">سهمی</button>
@@ -2662,15 +2872,15 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">📋 جزئیات هزینه</h3>
+                <h3 class="modal-title"><i data-ic="list"></i> جزئیات هزینه</h3>
                 <button class="modal-close" data-act="close" data-arg="expenseDetailModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body" id="expenseDetailContent"></div>
             <div class="modal-footer admin-only">
                 <div class="btn-group">
                     <button class="btn btn-secondary" data-act="dupExpense">تکرار</button>
-                    <button class="btn btn-outline" data-act="editExpense">✏️ ویرایش</button>
-                    <button class="btn btn-danger" data-act="deleteExpense">🗑️ حذف</button>
+                    <button class="btn btn-outline" data-act="editExpense"><i data-ic="edit"></i> ویرایش</button>
+                    <button class="btn btn-danger" data-act="deleteExpense"><i data-ic="trash"></i> حذف</button>
                 </div>
             </div>
         </div>
@@ -2681,16 +2891,16 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">👤 افزودن عضو</h3>
+                <h3 class="modal-title"><i data-ic="person"></i> افزودن عضو</h3>
                 <button class="modal-close" data-act="close" data-arg="addMemberModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label" for="newMemberName">👤 نام عضو <span class="required">*</span></label>
+                    <label class="form-label" for="newMemberName"><i data-ic="person"></i> نام عضو <span class="required">*</span></label>
                     <input type="text" class="form-input" id="newMemberName" placeholder="نام عضو جدید" maxlength="30">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">😊 آواتار</label>
+                    <label class="form-label"><i data-ic="person"></i> آواتار</label>
                     <div class="avatar-grid" id="newMemberAvatarGrid" data-avatar-grid="member"></div>
                 </div>
             </div>
@@ -2705,15 +2915,15 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">👤 جزئیات عضو</h3>
+                <h3 class="modal-title"><i data-ic="person"></i> جزئیات عضو</h3>
                 <button class="modal-close" data-act="close" data-arg="memberDetailModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body" id="memberDetailContent"></div>
             <div class="modal-footer admin-only">
                 <div class="btn-group">
-                    <button class="btn btn-outline" data-act="editMember">✏️ ویرایش</button>
+                    <button class="btn btn-outline" data-act="editMember"><i data-ic="edit"></i> ویرایش</button>
                     <button class="btn btn-warning" id="toggleMemberBtn" data-act="toggleMember">غیرفعال</button>
-                    <button class="btn btn-danger" data-act="removeMember">🗑️ حذف</button>
+                    <button class="btn btn-danger" data-act="removeMember"><i data-ic="trash"></i> حذف</button>
                 </div>
             </div>
         </div>
@@ -2724,22 +2934,22 @@
         <div class="modal-content">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3 class="modal-title">✏️ ویرایش عضو</h3>
+                <h3 class="modal-title"><i data-ic="edit"></i> ویرایش عضو</h3>
                 <button class="modal-close" data-act="close" data-arg="editMemberModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="editMemberId">
                 <div class="form-group">
-                    <label class="form-label" for="editMemberName">👤 نام</label>
+                    <label class="form-label" for="editMemberName"><i data-ic="person"></i> نام</label>
                     <input type="text" class="form-input" id="editMemberName" maxlength="30">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">😊 آواتار</label>
+                    <label class="form-label"><i data-ic="person"></i> آواتار</label>
                     <div class="avatar-grid" id="editMemberAvatarGrid" data-avatar-grid="editMember"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="updateMember">💾 ذخیره</button>
+                <button class="btn btn-primary btn-lg" style="width: 100%;" data-act="updateMember"><i data-ic="download"></i> ذخیره</button>
             </div>
         </div>
     </div>
@@ -2748,7 +2958,7 @@
     <div id="identityModal" class="modal modal-center" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">👋 شما کدام عضو هستید؟</h3>
+                <h3 class="modal-title"><i data-ic="person"></i> شما کدام عضو هستید؟</h3>
             </div>
             <div class="modal-body">
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
@@ -2763,7 +2973,7 @@
     <div id="shareModal" class="modal modal-center" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">📤 کد سفر</h3>
+                <h3 class="modal-title"><i data-ic="share"></i> کد سفر</h3>
                 <button class="modal-close" data-act="close" data-arg="shareModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body" style="text-align: center;">
@@ -2775,26 +2985,26 @@
                         <span>این کد فقط روی <strong>همین دستگاه</strong> سفر را باز می‌کند. برای اینکه دوستانتان روی گوشی خودشان همین سفر را ببینند و هزینه‌ها زنده به‌روز شود، همگام‌سازی را روشن کنید.</span>
                     </div>
                     <button class="btn btn-primary btn-lg" style="width:100%; margin-top:14px;" data-act="enableSync">
-                        ☁️ روشن کردن همگام‌سازی
+                        <i data-ic="cloud"></i> روشن کردن همگام‌سازی
                     </button>
                     <div class="btn-group" style="margin-top: 10px;">
-                        <button class="btn btn-secondary" data-act="copyCode">📋 کپی کد</button>
-                        <button class="btn btn-outline" data-act="export">💾 فایل سفر</button>
+                        <button class="btn btn-secondary" data-act="copyCode"><i data-ic="list"></i> کپی کد</button>
+                        <button class="btn btn-outline" data-act="export"><i data-ic="download"></i> فایل سفر</button>
                     </div>
                 </div>
 
                 <div id="syncOnBlock" style="display:none;">
                     <div class="banner info" style="text-align: right;">
-                        <span class="bn-icon">🔗</span>
+                        <span class="bn-icon"><i data-ic="link"></i></span>
                         <span>این لینک را برای هم‌سفرانتان بفرستید. هرکس بازش کند وارد همین سفر می‌شود و تغییرات هر دو طرف با هم ادغام می‌شود.
                         <strong>هرکس لینک را داشته باشد دسترسی دارد</strong>، پس فقط برای هم‌سفران بفرستید.</span>
                     </div>
                     <div class="share-link" id="shareLinkBox"></div>
                     <div class="btn-group" style="margin-top: 12px;">
-                        <button class="btn btn-primary" data-act="copyLink">📋 کپی لینک</button>
-                        <button class="btn btn-secondary" data-act="shareLink">📤 ارسال</button>
+                        <button class="btn btn-primary" data-act="copyLink"><i data-ic="list"></i> کپی لینک</button>
+                        <button class="btn btn-secondary" data-act="shareLink"><i data-ic="share"></i> ارسال</button>
                     </div>
-                    <button class="btn btn-outline btn-sm" style="width:100%; margin-top:10px;" data-act="syncNow">🔄 همگام‌سازی دستی</button>
+                    <button class="btn btn-outline btn-sm" style="width:100%; margin-top:10px;" data-act="syncNow"><i data-ic="refresh"></i> همگام‌سازی دستی</button>
                     <button class="btn btn-ghost btn-sm" style="width:100%; margin-top:6px;" data-act="disableSync">قطع همگام‌سازی این سفر</button>
                 </div>
             </div>
@@ -2805,15 +3015,15 @@
     <div id="importExportModal" class="modal modal-center" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">📦 ورود/خروج داده</h3>
+                <h3 class="modal-title"><i data-ic="box"></i> ورود/خروج داده</h3>
                 <button class="modal-close" data-act="close" data-arg="importExportModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body">
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     داده‌های سفر را به صورت فایل JSON ذخیره یا بارگذاری کنید. این تنها راه انتقال سفر بین دستگاه‌ها و گرفتن پشتیبان است.
                 </p>
-                <button class="btn btn-success btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="export">📤 خروجی JSON</button>
-                <button class="btn btn-outline btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="importFile">📥 بارگذاری JSON</button>
+                <button class="btn btn-success btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="export"><i data-ic="share"></i> خروجی JSON</button>
+                <button class="btn btn-outline btn-lg" style="width: 100%; margin-bottom: 10px;" data-act="importFile"><i data-ic="upload"></i> بارگذاری JSON</button>
                 <button class="btn btn-secondary btn-lg" style="width: 100%;" data-act="exportCsv">خروجی CSV برای اکسل</button>
             </div>
         </div>
@@ -2823,7 +3033,7 @@
     <div id="confirmModal" class="modal modal-center" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="confirmTitle">⚠️ تأیید</h3>
+                <h3 class="modal-title" id="confirmTitle"><i data-ic="warn"></i> تأیید</h3>
                 <button class="modal-close" data-act="close" data-arg="confirmModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body" style="text-align: center;">
@@ -2864,30 +3074,164 @@
        ===================================================================== */
 
     // ========== CONSTANTS ==========
-    const AVATARS = ['😀','😎','🤩','😊','🥳','😇','🤠','🧑‍💼','👨‍🎨','👩‍🚀','🧙‍♂️','🦸‍♀️','🧑‍🔬','🧑‍🎤','🐱','🦊','🐸','🐼'];
+
+    // Fill every markup icon slot. Called on boot and after any render that
+    // injects new slots, so markup can stay declarative.
+    function paintIcons(root) {
+        (root || document).querySelectorAll('i[data-ic]:empty').forEach(el => {
+            el.innerHTML = icon(el.dataset.ic, Number(el.dataset.size) || 17);
+        });
+        (root || document).querySelectorAll('[data-icon]:empty').forEach(el => {
+            el.innerHTML = icon(el.dataset.icon, 20);
+        });
+    }
+
+    // ========== ICON SYSTEM ==========
+    // Emoji were rendering differently on every platform - the brand mark showed
+    // as a solid rectangle, category glyphs came out as flat blobs at small
+    // sizes, and none of them could take a colour. These are stroke icons on a
+    // 24 grid that inherit currentColor and stay crisp at any size.
+    const IC = {
+        // categories
+        food:      '<path d="M4 3v8a3 3 0 0 0 6 0V3"/><path d="M7 3v18"/><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4v9"/>',
+        transport: '<path d="M5 17h14"/><path d="M6 17v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2"/><path d="M21 19a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-2"/><path d="M3 17v-4l2-5a2 2 0 0 1 2-1.3h10A2 2 0 0 1 19 8l2 5v4z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>',
+        stay:      '<path d="M3 21V7l9-4 9 4v14"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01"/>',
+        shopping:  '<path d="M6 2 3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7l-3-5z"/><path d="M3 7h18"/><path d="M16 11a4 4 0 0 1-8 0"/>',
+        fun:       '<path d="M12 3v18"/><path d="M4 8h16"/><path d="M5 21 7 8l5-5 5 5 2 13"/><circle cx="12" cy="14" r="2"/>',
+        other:     '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M12 7V4"/><path d="M8.5 4h7"/>',
+        // navigation
+        home:      '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/>',
+        list:      '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/>',
+        people:    '<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5"/><path d="M18.5 20a5.5 5.5 0 0 0-3-4.9"/>',
+        chart:     '<path d="M3 3v18h18"/><path d="M7.5 15.5v-4M12 15.5v-8M16.5 15.5v-5"/>',
+        // actions and status
+        plus:      '<path d="M12 5v14M5 12h14"/>',
+        share:     '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/>',
+        download:  '<path d="M12 3v12"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4 17v3h16v-3"/>',
+        edit:      '<path d="M4 20h4L20 8a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M14.5 5.5 18.5 9.5"/>',
+        trash:     '<path d="M4 6h16"/><path d="M9 6V4h6v2"/><path d="M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14"/><path d="M10 11v6M14 11v6"/>',
+        settings:  '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+        box:       '<path d="M3 8 12 3l9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v10"/>',
+        back:      '<path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>',
+        close:     '<path d="M6 6l12 12M18 6 6 18"/>',
+        check:     '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+        search:    '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+        camera:    '<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>',
+        calendar:  '<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        wallet:    '<path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M16 12h2"/><path d="M3 9h18"/>',
+        money:     '<circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M14.5 9.5c-.5-.9-1.5-1.3-2.5-1.3-1.4 0-2.5.8-2.5 2s1.1 1.8 2.5 2 2.5.7 2.5 2-1.1 2-2.5 2c-1.1 0-2-.4-2.5-1.3"/>',
+        scale:     '<path d="M12 4v16"/><path d="M6 8h12"/><path d="M6 8l-3 6a3 3 0 0 0 6 0z"/><path d="M18 8l-3 6a3 3 0 0 0 6 0z"/>',
+        person:    '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+        receipt:   '<path d="M4 3v18l2.5-1.5L9 21l2.5-1.5L14 21l2.5-1.5L19 21V3l-2.5 1.5L14 3l-2.5 1.5L9 3 6.5 4.5z"/><path d="M8 8h8M8 12h6"/>',
+        suitcase:  '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+        cloud:     '<path d="M6.5 18a4 4 0 0 1-.3-8A5.5 5.5 0 0 1 17 10.2a3.9 3.9 0 0 1-.5 7.8z"/>',
+        refresh:   '<path d="M20 11A8 8 0 0 0 6.3 6.3L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 13.7 4.7L20 15.5"/><path d="M20 20v-4.5h-4.5"/>',
+        crown:     '<path d="M3 8l3.5 3L12 5l5.5 6L21 8l-1.8 10.5a1 1 0 0 1-1 .8H5.8a1 1 0 0 1-1-.8z"/>',
+        trophy:    '<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5A2.5 2.5 0 0 0 7 10"/><path d="M17 6h2.5A2.5 2.5 0 0 1 17 10"/><path d="M10 14v3h4v-3"/><path d="M8 21h8"/>',
+        print:     '<path d="M7 8V3h10v5"/><rect x="3" y="8" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+        upload:    '<path d="M12 16V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 17v3h16v-3"/>',
+        link:      '<path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 1 0-5.7-5.7L11.5 6.3"/><path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 1 0 5.7 5.7l1.4-1.4"/>',
+        info:      '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+        warn:      '<path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>'
+    };
+    function icon(name, size, cls) {
+        const d = IC[name] || IC.other;
+        return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" ' +
+               'stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" ' +
+               'width="' + (size || 20) + '" height="' + (size || 20) + '" aria-hidden="true">' + d + '</svg>';
+    }
+
+    // ========== AVATAR SYSTEM ==========
+    // Emoji avatars looked different on every OS, could not be tinted, and left
+    // screen readers with nothing to announce. These are generated SVG faces:
+    // one pastel palette, a handful of features, identical everywhere.
+    const AV_SKIN = ['#F5D0B0', '#E8B58C', '#C98C63', '#8D5B3F', '#F7DFC6'];
+    const AV_BG = [
+        ['#FFD6E8', '#FFB3D1'], ['#D6ECFF', '#A9D6FF'], ['#DCF7E3', '#A8E6C0'],
+        ['#FFF0CC', '#FFDD99'], ['#EADCFF', '#CDB4FF'], ['#FFE0D3', '#FFBFA3'],
+        ['#D3F6F3', '#A0E7E0'], ['#FFE3F1', '#FFC2DE'], ['#E4E9FF', '#BFC9FF']
+    ];
+    const AV_HAIR = ['#2E2A28', '#5A3A22', '#8C5A2B', '#C9843E', '#E4C58A', '#6B4E9E', '#D45D79', '#3B6FA0'];
+
+    // 18 stable presets so the picker always shows the same faces in the same order
+    const AVATARS = Array.from({ length: 18 }, (_, i) => 'a' + i);
     const AVATAR_SET = new Set(AVATARS);
-    // Screen readers announced these as a bare "button". Each option now carries
-    // a Persian name, so the picker is usable without sight.
-    const AVATAR_NAMES = {};
-    ['خندان','عینک آفتابی','هیجان‌زده','لبخند','جشن','فرشته','کابوی','کارمند',
-     'هنرمند','فضانورد','جادوگر','ابرقهرمان','دانشمند','خواننده',
-     'گربه','روباه','قورباغه','پاندا'].forEach((nm, i) => {
-        if (AVATARS[i]) AVATAR_NAMES[AVATARS[i]] = nm;
-    });
-    function avatarName(a) { return AVATAR_NAMES[a] || 'آواتار'; }
-    const DEFAULT_AVATAR = AVATARS[0];
+    const DEFAULT_AVATAR = 'a0';
+
+    const AV_STYLE = [
+        { hair: 'short',  acc: null },      { hair: 'bun',    acc: null },
+        { hair: 'long',   acc: null },      { hair: 'curly',  acc: 'glasses' },
+        { hair: 'short',  acc: 'glasses' }, { hair: 'ponytail', acc: null },
+        { hair: 'bald',   acc: 'beard' },   { hair: 'long',   acc: 'glasses' },
+        { hair: 'curly',  acc: null },      { hair: 'bun',    acc: 'glasses' },
+        { hair: 'short',  acc: 'beard' },   { hair: 'ponytail', acc: 'glasses' },
+        { hair: 'long',   acc: null },      { hair: 'curly',  acc: 'beard' },
+        { hair: 'bald',   acc: null },      { hair: 'bun',    acc: null },
+        { hair: 'short',  acc: null },      { hair: 'long',   acc: 'glasses' }
+    ];
+    const AVATAR_NAMES = [
+        'موی کوتاه', 'گوجه‌ای', 'موی بلند', 'فرفری با عینک', 'کوتاه با عینک', 'دم‌اسبی',
+        'با ریش', 'بلند با عینک', 'فرفری', 'گوجه‌ای با عینک', 'کوتاه با ریش', 'دم‌اسبی با عینک',
+        'موی بلند روشن', 'فرفری با ریش', 'ساده', 'گوجه‌ای روشن', 'کوتاه روشن', 'بلند با عینک تیره'
+    ];
+    function avatarName(key) {
+        const i = AVATARS.indexOf(key);
+        return i >= 0 ? AVATAR_NAMES[i] : 'آواتار';
+    }
+
+    function avatarSVG(key, size) {
+        let i = AVATARS.indexOf(key);
+        if (i < 0) i = 0;
+        const st = AV_STYLE[i];
+        const skin = AV_SKIN[i % AV_SKIN.length];
+        const bg = AV_BG[i % AV_BG.length];
+        const hair = AV_HAIR[i % AV_HAIR.length];
+        const gid = 'avg' + i;
+        const s = size || 40;
+
+        let hairShape = '';
+        if (st.hair === 'short')    hairShape = '<path d="M14 27c0-8 5-13 12-13s12 5 12 13c0 0-3-5-12-5s-12 5-12 5z" fill="' + hair + '"/>';
+        if (st.hair === 'bun')      hairShape = '<circle cx="26" cy="9" r="5" fill="' + hair + '"/><path d="M14 27c0-8 5-13 12-13s12 5 12 13c0 0-3-5-12-5s-12 5-12 5z" fill="' + hair + '"/>';
+        if (st.hair === 'long')     hairShape = '<path d="M13 27c0-9 5-14 13-14s13 5 13 14v11c0 1-1 2-2 2h-2V24c0-3-9-4-9-4s-9 1-9 4v16h-2c-1 0-2-1-2-2z" fill="' + hair + '"/>';
+        if (st.hair === 'curly')    hairShape = '<g fill="' + hair + '"><circle cx="17" cy="20" r="6"/><circle cx="26" cy="16" r="7"/><circle cx="35" cy="20" r="6"/><circle cx="20" cy="26" r="5"/><circle cx="32" cy="26" r="5"/></g>';
+        if (st.hair === 'ponytail') hairShape = '<path d="M14 27c0-8 5-13 12-13s12 5 12 13c0 0-3-5-12-5s-12 5-12 5z" fill="' + hair + '"/><path d="M38 24c4 1 6 5 5 10-1 4-4 5-5 4 2-4 2-9 0-14z" fill="' + hair + '"/>';
+        if (st.hair === 'bald')     hairShape = '';
+
+        const acc = st.acc === 'glasses'
+            ? '<g fill="none" stroke="#2E3440" stroke-width="1.6" opacity="0.85"><circle cx="21" cy="31" r="4.4"/><circle cx="31" cy="31" r="4.4"/><path d="M25.4 31h1.2"/></g>'
+            : '';
+        const beard = st.acc === 'beard'
+            ? '<path d="M17 32c0 8 4 12 9 12s9-4 9-12c0 0-2 6-9 6s-9-6-9-6z" fill="' + hair + '" opacity="0.9"/>'
+            : '';
+
+        return '<svg class="av" viewBox="0 0 52 52" width="' + s + '" height="' + s + '" aria-hidden="true">' +
+            '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0" stop-color="' + bg[0] + '"/><stop offset="1" stop-color="' + bg[1] + '"/>' +
+            '</linearGradient></defs>' +
+            '<circle cx="26" cy="26" r="26" fill="url(#' + gid + ')"/>' +
+            '<path d="M26 44c-7 0-13 3-15 7h30c-2-4-8-7-15-7z" fill="' + skin + '"/>' +
+            '<rect x="23" y="36" width="6" height="8" rx="3" fill="' + skin + '"/>' +
+            '<ellipse cx="26" cy="29" rx="11" ry="12" fill="' + skin + '"/>' +
+            beard +
+            '<circle cx="21.5" cy="29" r="1.5" fill="#2E3440"/>' +
+            '<circle cx="30.5" cy="29" r="1.5" fill="#2E3440"/>' +
+            '<path d="M22.5 34.5c1.6 1.6 5.4 1.6 7 0" stroke="#2E3440" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+            hairShape + acc +
+            '</svg>';
+    }
+
 
     const CATEGORIES = [
-        { id: 'food',      name: 'غذا',      icon: '🍕', color: '#FF6B6B' },
-        { id: 'transport', name: 'حمل‌ونقل', icon: '🚗', color: '#4ECDC4' },
-        { id: 'stay',      name: 'اقامت',    icon: '🏨', color: '#45B7D1' },
-        { id: 'shopping',  name: 'خرید',     icon: '🛍️', color: '#96CEB4' },
-        { id: 'fun',       name: 'تفریح',    icon: '🎢', color: '#FFC65C' },
-        { id: 'other',     name: 'سایر',     icon: '📦', color: '#DDA0DD' }
+        { id: 'food',      name: 'غذا',      icon: 'food',      color: '#F26D6D' },
+        { id: 'transport', name: 'حمل‌ونقل', icon: 'transport', color: '#2FB6AC' },
+        { id: 'stay',      name: 'اقامت',    icon: 'stay',      color: '#3E9AD4' },
+        { id: 'shopping',  name: 'خرید',     icon: 'shopping',  color: '#5CB88A' },
+        { id: 'fun',       name: 'تفریح',    icon: 'fun',       color: '#E0A32E' },
+        { id: 'other',     name: 'سایر',     icon: 'other',     color: '#A87FD0' }
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '5.0.0';
+    const APP_VERSION    = '6.0.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -2929,9 +3273,9 @@
     }
     // Avatars are user data too (a crafted JSON import can carry markup), so they
     // are whitelisted against the known set and then escaped like any other text.
-    function escAvatar(a) {
+    function escAvatar(a, size) {
         const v = String(a == null ? '' : a);
-        return esc(AVATAR_SET.has(v) ? v : DEFAULT_AVATAR);
+        return avatarSVG(AVATAR_SET.has(v) ? v : DEFAULT_AVATAR, size);
     }
 
     // ========== IDS ==========
@@ -4066,32 +4410,11 @@
     }
 
 
-    // ========== INLINE ICON SET ==========
-    // Placeholder characters (%, *, -, +) were standing in for real icons in the
-    // empty states, which read as broken rather than intentional. These are
-    // stroke icons that inherit currentColor and scale with the box.
-    function svgIcon(paths, size) {
-        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
-               'stroke-linecap="round" stroke-linejoin="round" width="' + (size || 28) + '" height="' +
-               (size || 28) + '" aria-hidden="true">' + paths + '</svg>';
-    }
-    const ICONS = {
-        receipt:  '<path d="M4 3v18l2.5-1.5L9 21l2.5-1.5L14 21l2.5-1.5L19 21V3l-2.5 1.5L14 3l-2.5 1.5L9 3 6.5 4.5z"/><path d="M8 8h8M8 12h6"/>',
-        chart:    '<path d="M3 3v18h18"/><path d="M7 15l3.5-4 3 3L20 7"/>',
-        wallet:   '<path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M16 12h2"/><path d="M3 9h18"/>',
-        users:    '<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5"/><path d="M18 20a5.5 5.5 0 0 0-3-4.9"/>',
-        check:    '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
-        scale:    '<path d="M12 4v16"/><path d="M6 8h12"/><path d="M6 8l-3 6a3 3 0 0 0 6 0z"/><path d="M18 8l-3 6a3 3 0 0 0 6 0z"/>',
-        person:   '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
-        money:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M14.5 9.5c-.5-.9-1.5-1.3-2.5-1.3-1.4 0-2.5.8-2.5 2s1.1 1.8 2.5 2 2.5.7 2.5 2-1.1 2-2.5 2c-1.1 0-2-.4-2.5-1.3"/>',
-        calendar: '<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/>',
-        search:   '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
-        plus:     '<path d="M12 5v14M5 12h14"/>',
-        camera:   '<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>',
-        suitcase: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>'
-    };
+    // A single icon set lives in IC/icon(); this shim keeps the older
+    // emptyState call sites working without duplicating the paths.
     function emptyState(iconKey, title, desc) {
-        return '<div class="empty-state"><span class="icon">' + svgIcon(ICONS[iconKey] || ICONS.receipt, 30) + '</span>' +
+        const key = iconKey === 'users' ? 'people' : iconKey;
+        return '<div class="empty-state"><span class="icon">' + icon(key, 30) + '</span>' +
                (title ? '<div class="title">' + esc(title) + '</div>' : '') +
                (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') + '</div>';
     }
@@ -4206,7 +4529,10 @@
     }
 
     // ========== THEME ==========
-    const THEME_COLORS = { night: '#0F172A', day: '#F0F4F8', sunset: '#1C1917', ocean: '#0C1929', forest: '#0A1F10' };
+    const THEME_COLORS = {
+        night:  '#0F172A', pastel: '#FFF6FA', day: '#EEF2F7',
+        sunset: '#1C1917', ocean:  '#0C1929', forest: '#0A1F10'
+    };
     function setTheme(theme) {
         if (!THEME_COLORS[theme]) theme = 'night';
         document.documentElement.setAttribute('data-theme', theme);
@@ -4320,7 +4646,7 @@
             const admin = m.id === currentTrip.adminId ? '<span class="pk-tag">مدیر سفر</span>' : '';
             const off = m.active === false ? '<span class="pk-tag">غیرفعال</span>' : '';
             return '<button class="pick-item" data-act="pickIdentity" data-arg="' + esc(m.id) + '">' +
-                   '<span class="pk-avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="pk-avatar">' + escAvatar(m.avatar, 38) + '</span>' +
                    '<span class="pk-name">' + esc(m.name) + '</span>' + admin + off + '</button>';
         }).join('');
         list.innerHTML = rows +
@@ -4375,7 +4701,7 @@
         container.innerHTML = recent.map(trip =>
             '<div class="recent-trip-item" role="button" tabindex="0" data-act="openRecent" data-arg="' +
                 esc(trip.code) + '" aria-label="گشودن سفر ' + esc(trip.name) + '">' +
-                '<div class="recent-trip-icon" aria-hidden="true">' + svgIcon(ICONS.suitcase, 22) + '</div>' +
+                '<div class="recent-trip-icon" aria-hidden="true">' + icon('suitcase', 22) + '</div>' +
                 '<div class="recent-trip-info">' +
                     '<div class="recent-trip-name">' + esc(trip.name) + '</div>' +
                     '<div class="recent-trip-meta">' + toPersian(trip.memberCount || 0) + ' نفر - ' +
@@ -4665,7 +4991,7 @@
 
         setHTML('memberDetailContent',
             '<div style="text-align:center;margin-bottom:20px;">' +
-            '<div style="font-size:60px;margin-bottom:12px;">' + escAvatar(member.avatar) + '</div>' +
+            '<div class="detail-avatar">' + escAvatar(member.avatar, 84) + '</div>' +
             '<h3 style="font-size:20px;margin-bottom:8px;">' + esc(member.name) + '</h3>' +
             adminBadge + offBadge + '</div>' +
             '<div class="stats-grid">' +
@@ -4813,13 +5139,13 @@
         const payerSel = editing ? editing.payerId : (currentUser ? currentUser.id : (pool[0] && pool[0].id));
         $('expensePayer').innerHTML = pool.map(m =>
             '<option value="' + esc(m.id) + '"' + (m.id === payerSel ? ' selected' : '') + '>' +
-            escAvatar(m.avatar) + ' ' + esc(m.name) + '</option>'
+            esc(m.name) + '</option>'
         ).join('');
 
         const inSplit = id => !editing || editing.splitBetween.indexOf(id) >= 0;
         $('splitMembersList').innerHTML = pool.map(m =>
             '<label class="checkbox-item"><input type="checkbox" value="' + esc(m.id) + '"' +
-            (inSplit(m.id) ? ' checked' : '') + '><span>' + escAvatar(m.avatar) + ' ' + esc(m.name) + '</span></label>'
+            (inSplit(m.id) ? ' checked' : '') + '><span class="chk-row">' + escAvatar(m.avatar, 26) + esc(m.name) + '</span></label>'
         ).join('');
 
         $('customSplitList').innerHTML = pool.map(m => {
@@ -4829,7 +5155,7 @@
                 val = formatNumber(editing.customAmounts[m.id]);
             }
             return '<div class="custom-split-item"><div class="info">' +
-                   '<span class="avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="avatar">' + escAvatar(m.avatar, 26) + '</span>' +
                    '<span class="name">' + esc(m.name) + '</span></div>' +
                    '<input type="text" data-member="' + esc(m.id) + '" placeholder="0" inputmode="numeric" ' +
                    'autocomplete="off" value="' + esc(val) + '"></div>';
@@ -4841,7 +5167,7 @@
                 val = String(editing.splitWeights[m.id]);
             }
             return '<div class="custom-split-item"><div class="info">' +
-                   '<span class="avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="avatar">' + escAvatar(m.avatar, 26) + '</span>' +
                    '<span class="name">' + esc(m.name) + '</span></div>' +
                    '<input type="text" data-weight="' + esc(m.id) + '" placeholder="1" ' +
                    'inputmode="decimal" autocomplete="off" value="' + esc(val) + '"></div>';
@@ -5094,13 +5420,13 @@
         const rows = exp.splitBetween.map(id => {
             const m = getMember(id);
             return '<div class="split-member-item"><span>' +
-                   (m ? escAvatar(m.avatar) + ' ' + esc(m.name) : 'نامشخص') + '</span><span>' +
+                   (m ? '<span class="inline-av">' + escAvatar(m.avatar, 22) + esc(m.name) + '</span>' : 'نامشخص') + '</span><span>' +
                    formatNumber(shares[id] || 0) + ' ' + cur + '</span></div>';
         }).join('');
 
         setHTML('expenseDetailContent',
             '<div style="text-align:center;margin-bottom:20px;">' +
-            '<div style="font-size:48px;margin-bottom:12px;">' + esc(cat.icon) + '</div>' +
+            '<div class="detail-cat" style="--cat:' + esc(cat.color) + '">' + icon(cat.icon, 26) + '</div>' +
             '<h3 style="font-size:18px;margin-bottom:8px;">' + esc(exp.title) + '</h3>' +
             '<div style="font-size:24px;font-weight:900;color:var(--primary);">' +
             formatNumber(baseAmount(exp)) + ' ' + cur + '</div>' +
@@ -5112,8 +5438,9 @@
                         '<span class="bn-icon">*</span><span>' + esc(exp.note) + '</span></div>' : '') +
             '<div class="expense-detail-info">' +
             '<div class="info-row"><span>پرداخت‌کننده</span><span>' +
-            (payer ? escAvatar(payer.avatar) + ' ' + esc(payer.name) : 'نامشخص') + '</span></div>' +
-            '<div class="info-row"><span>دسته‌بندی</span><span>' + esc(cat.icon) + ' ' + esc(cat.name) + '</span></div>' +
+            (payer ? '<span class="inline-av">' + escAvatar(payer.avatar, 22) + esc(payer.name) + '</span>' : 'نامشخص') + '</span></div>' +
+            '<div class="info-row"><span>دسته‌بندی</span><span class="inline-ic" style="--cat:' + esc(cat.color) + '">' +
+                icon(cat.icon, 16) + esc(cat.name) + '</span></div>' +
             '<div class="info-row"><span>تقسیم بین</span><span>' + toPersian(exp.splitBetween.length) + ' نفر</span></div>' +
             '<div class="info-row"><span>نوع تقسیم</span><span>' +
             ({ equal: 'مساوی', custom: 'مبلغ دقیق', percent: 'درصدی', shares: 'سهمی' }[exp.splitType] || 'مساوی') +
@@ -5238,7 +5565,7 @@
         container.innerHTML = AVATARS.map(a =>
             '<button type="button" class="avatar-option' + (a === selected ? ' selected' : '') +
             '" data-avatar="' + esc(a) + '" aria-pressed="' + (a === selected ? 'true' : 'false') +
-            '" aria-label="آواتار ' + esc(avatarName(a)) + '">' + esc(a) + '</button>'
+            '" aria-label="آواتار ' + esc(avatarName(a)) + '">' + avatarSVG(a, 46) + '</button>'
         ).join('');
     }
     function selectAvatar(containerId, formKey, avatar) {
@@ -5261,7 +5588,7 @@
             '<button type="button" class="category-option' + (c.id === selected ? ' selected' : '') +
             '" data-cat="' + esc(c.id) + '" aria-pressed="' + (c.id === selected ? 'true' : 'false') +
             '" aria-label="دسته ' + esc(c.name) + '">' +
-            '<span class="icon" aria-hidden="true">' + esc(c.icon) + '</span>' +
+            '<span class="icon" style="--cat:' + esc(c.color) + '">' + icon(c.icon, 22) + '</span>' +
             '<span class="label">' + esc(c.name) + '</span></button>'
         ).join('');
     }
@@ -5288,7 +5615,7 @@
             CATEGORIES.map(c =>
                 '<button class="filter-chip' + (filterCategory === c.id ? ' active' : '') +
                 '" data-act="filter" data-arg="' + esc(c.id) + '">' +
-                esc(c.icon) + ' ' + esc(c.name) + '</button>'
+                icon(c.icon, 15) + esc(c.name) + '</button>'
             ).join('');
     }
     function setFilter(cat) {
@@ -5393,7 +5720,7 @@
             const pct = Math.round((Math.abs(bal) / peak) * 100);
             return '<div class="balance-item">' +
                    '<div class="balance-row"><div class="balance-info">' +
-                   '<span class="balance-avatar">' + escAvatar(m.avatar) + '</span>' +
+                   '<span class="balance-avatar">' + escAvatar(m.avatar, 26) + '</span>' +
                    '<span class="balance-name">' + esc(m.name) + me + off + '</span></div>' +
                    '<span class="balance-amount ' + (bal >= 0 ? 'positive' : 'negative') + '">' +
                    ltrNum(formatSigned(bal)) + '</span></div>' +
@@ -5410,8 +5737,8 @@
                      ' - ' + dayLabel(exp.spentAt || exp.createdAt);
         return '<div class="expense-item" role="button" tabindex="0" aria-label="' + esc(a11y) +
                '" data-act="openExpense" data-arg="' + esc(exp.id) + '">' +
-               '<div class="expense-icon" style="background:' + cat.color + '22;color:' + cat.color + '">' +
-               esc(cat.icon) + '</div>' +
+               '<div class="expense-icon" style="background:' + cat.color + '1F;color:' + cat.color + '">' +
+               icon(cat.icon, 21) + '</div>' +
                '<div class="expense-info"><div class="expense-title">' + esc(exp.title) + '</div>' +
                '<div class="expense-meta"><span>' + esc(payer ? payer.name : 'نامشخص') + '</span>' +
                '<span class="dot"></span><span>' + esc(cat.name) + '</span>' +
@@ -5488,7 +5815,7 @@
             return '<div class="member-item' + (isActive ? '' : ' inactive') +
                    '" role="button" tabindex="0" aria-label="' + esc(mLabel) +
                    '" data-act="openMember" data-arg="' + esc(m.id) + '">' +
-                   '<div class="member-avatar">' + escAvatar(m.avatar) + '</div>' +
+                   '<div class="member-avatar">' + escAvatar(m.avatar, 42) + '</div>' +
                    '<div class="member-info"><div class="member-name">' + esc(m.name) +
                    (m.id === currentTrip.adminId ? '<span class="admin-badge">(مدیر)</span>' : '') +
                    (isMe ? '<span class="you-badge">شما</span>' : '') +
@@ -5505,11 +5832,11 @@
         setHTML('settlementList', settlements.length
             ? settlements.map(s =>
                 '<div class="settlement-item">' +
-                '<div class="settlement-person"><div class="avatar">' + escAvatar(s.from.avatar) + '</div>' +
+                '<div class="settlement-person"><div class="avatar">' + escAvatar(s.from.avatar, 34) + '</div>' +
                 '<div class="name">' + esc(s.from.name) + '</div></div>' +
                 '<div class="settlement-arrow"><div class="amount">' + formatNumber(s.amount) + ' ' + cur + '</div>' +
                 '<div class="arrow-icon">&#8592;</div></div>' +
-                '<div class="settlement-person"><div class="avatar">' + escAvatar(s.to.avatar) + '</div>' +
+                '<div class="settlement-person"><div class="avatar">' + escAvatar(s.to.avatar, 34) + '</div>' +
                 '<div class="name">' + esc(s.to.name) + '</div></div>' +
                 '<button class="btn btn-sm btn-success" style="white-space:nowrap;" data-act="settle" ' +
                 'data-from="' + esc(s.from.id) + '" data-to="' + esc(s.to.id) + '" data-amount="' + s.amount + '">' +
@@ -5569,7 +5896,7 @@
         setHTML('topSpenders', spenders.length
             ? spenders.map((s, i) =>
                 '<div class="top-spender-item"><span class="rank">' + toPersian(i + 1) + '</span>' +
-                '<span class="spender-avatar">' + escAvatar(s.m.avatar) + '</span>' +
+                '<span class="spender-avatar">' + escAvatar(s.m.avatar, 30) + '</span>' +
                 '<span class="spender-name">' + esc(s.m.name) + '</span>' +
                 '<span class="spender-amount">' + formatNumber(s.paid) + '</span></div>'
             ).join('')
@@ -6124,9 +6451,7 @@
         renderAvatarGrid('newMemberAvatarGrid', 'member');
         renderAvatarGrid('editMemberAvatarGrid', 'editMember');
         renderFilterChips();
-        document.querySelectorAll('[data-icon]').forEach(el => {
-            el.innerHTML = svgIcon(ICONS[el.dataset.icon] || ICONS.receipt, 20);
-        });
+        paintIcons(document);
 
         // A shared link wins over reopening whatever was last used on this device.
         const hash = (location.hash || '').match(/[#&]j=([A-Za-z0-9_-]{16,64})/);
