@@ -291,8 +291,6 @@
             height: calc(var(--topbar-height) + var(--safe-top));
             padding-top: var(--safe-top);
             background: var(--bg-secondary);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
@@ -692,7 +690,6 @@
         .trip-actions .btn {
             flex: 1;
             background: rgba(255,255,255,0.18);
-            backdrop-filter: blur(10px);
             color: white;
             font-size: 13px;
             border-radius: 12px;
@@ -707,8 +704,6 @@
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
             align-items: flex-end;
             justify-content: center;
@@ -801,8 +796,6 @@
             left: 0;
             right: 0;
             background: var(--bg-secondary);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid var(--glass-border);
             display: none;
             justify-content: space-around;
@@ -2416,13 +2409,13 @@
 
         /* A near-black scrim turned the pastel theme muddy; tint the veil so
            modals feel like they belong to the theme. */
-        .modal { background: rgba(24,16,22,.44); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); }
+        .modal { background: rgba(24,16,22,.44); -webkit- }
         [data-theme="pastel"] .modal { background: rgba(120, 60, 92, .30); }
         [data-theme="day"]    .modal { background: rgba(30, 41, 59, .38); }
         [data-theme="pastel"] .stat-card { border-color: rgba(233,119,159,.16); }
         [data-theme="pastel"] .sync-badge { background: rgba(233,119,159,.12); }
         [data-theme="pastel"] .top-bar,
-        [data-theme="pastel"] .bottom-nav { background: rgba(255,255,255,.86); backdrop-filter: blur(16px); }
+        [data-theme="pastel"] .bottom-nav { background: rgba(255,255,255,.86); }
         [data-theme="pastel"] .settings-panel { background: #fff; }
 
         /* ==========================================================
@@ -2582,6 +2575,17 @@
             .trip-header::after { animation: none; opacity: 0; }
             .balance-bar span, .donut-seg, .nav-item::before { transition: none; }
         }
+
+        /* Bars and modals use opaque surfaces instead of blurred backdrops.
+           A live backdrop blur on a fixed element sitting over a full-viewport
+           gradient made every field repaint recompute the blur, which stalled
+           the compositor outright on theme switches. */
+        .top-bar, .bottom-nav { background: var(--bg-secondary); }
+        [data-theme="pastel"] .top-bar,
+        [data-theme="pastel"] .bottom-nav { background: #FFFFFF; }
+        .modal { background: rgba(24,16,22,.58); }
+        [data-theme="pastel"] .modal { background: rgba(96,48,74,.42); }
+        [data-theme="day"]    .modal { background: rgba(30,41,59,.46); }
     </style>
 </head>
 <body>
@@ -3403,7 +3407,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.2.0';
+    const APP_VERSION    = '7.3.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
