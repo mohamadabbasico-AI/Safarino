@@ -2598,7 +2598,7 @@
     <header class="top-bar">
       <div class="top-bar-inner">
         <div class="top-bar-right">
-            <button class="back-btn" id="backBtn" data-act="goBack" title="بازگشت" aria-label="بازگشت">→</button>
+            <button class="back-btn" id="backBtn" data-act="goBack" title="بازگشت" aria-label="بازگشت"><i data-ic="back"></i></button>
             <span class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="top-bar-title">سفرینو</span></span>
         </div>
         <div class="top-bar-actions">
@@ -2623,7 +2623,7 @@
             </div>
         </div>
         <div class="settings-section">
-            <div class="settings-label">ℹ️ نسخه</div>
+            <div class="settings-label">ℹ نسخه</div>
             <div style="font-size: 12px; color: var(--text-muted);">سفرینو v6.0 — محمد عباسی</div>
         </div>
     </div>
@@ -2896,7 +2896,7 @@
             </div>
             <div class="modal-body">
                 <div class="banner info">
-                    <span class="bn-icon">ℹ️</span>
+                    <span class="bn-icon"><i data-ic="info"></i></span>
                     <span>کد سفر فقط روی <strong>همین دستگاه</strong> کار می‌کند، چون سفرینو داده‌ها را محلی نگه می‌دارد و سروری ندارد. برای انتقال سفر به دستگاه دیگر، از <strong>خروجی فایل JSON</strong> استفاده کنید.</span>
                 </div>
                 <div class="form-group">
@@ -3152,7 +3152,7 @@
 
                 <div id="syncOffBlock">
                     <div class="banner info" style="text-align: right;">
-                        <span class="bn-icon">ℹ️</span>
+                        <span class="bn-icon"><i data-ic="info"></i></span>
                         <span>این کد فقط روی <strong>همین دستگاه</strong> سفر را باز می‌کند. برای اینکه دوستانتان روی گوشی خودشان همین سفر را ببینند و هزینه‌ها زنده به‌روز شود، همگام‌سازی را روشن کنید.</span>
                     </div>
                     <button class="btn btn-primary btn-lg" style="width:100%; margin-top:14px;" data-act="enableSync">
@@ -3402,7 +3402,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.0.0';
+    const APP_VERSION    = '7.1.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -4850,7 +4850,7 @@
         const unique = Array.from(new Set(issues));
         const banner = $('integrityBanner');
         if (banner) {
-            banner.innerHTML = '<div class="banner warn"><span class="bn-icon">!</span><span>' +
+            banner.innerHTML = '<div class="banner warn"><span class="bn-icon">' + icon('warn', 16) + '</span><span>' +
                 '<strong>هنگام باز کردن این سفر چند مشکل اصلاح شد:</strong><br>' +
                 unique.map(esc).join('<br>') + '</span></div>';
         }
@@ -5367,7 +5367,7 @@
         const amt = parsePositiveAmount($('expenseAmount').value) || 0;
         hint.textContent = rate > 0
             ? ('هر ۱ ' + cur + ' = ' + formatNumber(rate) + ' ' + tripCurrency() +
-               (amt ? '  →  ' + formatNumber(amt * rate) + ' ' + tripCurrency() : ''))
+               (amt ? '  ←  ' + formatNumber(amt * rate) + ' ' + tripCurrency() : ''))
             : ('نرخ تبدیل هر ۱ ' + cur + ' به ' + tripCurrency() + ' را وارد کنید');
     }
 
@@ -5606,7 +5606,7 @@
             '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">' +
             esc(dayLabel(exp.spentAt || exp.createdAt)) + '</div></div>' +
             (exp.note ? '<div class="banner info" style="margin-bottom:14px;">' +
-                        '<span class="bn-icon">*</span><span>' + esc(exp.note) + '</span></div>' : '') +
+                        '<span class="bn-icon">' + icon('edit', 15) + '</span><span>' + esc(exp.note) + '</span></div>' : '') +
             '<div class="expense-detail-info">' +
             '<div class="info-row"><span>پرداخت‌کننده</span><span>' +
             (payer ? '<span class="inline-av">' + escAvatar(payer.avatar, 22) + esc(payer.name) + '</span>' : 'نامشخص') + '</span></div>' +
