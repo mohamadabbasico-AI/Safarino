@@ -1888,6 +1888,24 @@
         .bottom-nav { overflow: visible; }
         .bottom-nav-inner { overflow: visible; }
 
+        /* The avatar and category pickers were div[role=button]. They are real
+           <button> elements now (free keyboard + screen-reader semantics), so
+           they need the usual native-button resets to keep the same look. */
+        .avatar-option,
+        .category-option {
+            font-family: inherit;
+            color: inherit;
+            appearance: none;
+            -webkit-appearance: none;
+            border-width: 2px;
+            border-style: solid;
+            text-align: center;
+        }
+        .avatar-option { line-height: 1; padding: 0; }
+        .category-option { width: 100%; }
+        .avatar-option[aria-pressed="true"],
+        .category-option[aria-pressed="true"] { border-color: var(--primary); }
+
         /* Empty-state icons are SVG now, not text glyphs */
         .empty-state .icon {
             color: var(--text-muted);
@@ -2058,7 +2076,7 @@
         </div>
         <div class="settings-section">
             <div class="settings-label">ℹ️ نسخه</div>
-            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v4.1 — محمد عباسی</div>
+            <div style="font-size: 12px; color: var(--text-muted);">سفرینو v4.2 — محمد عباسی</div>
         </div>
     </div>
 
@@ -2658,6 +2676,15 @@
     // ========== CONSTANTS ==========
     const AVATARS = ['😀','😎','🤩','😊','🥳','😇','🤠','🧑‍💼','👨‍🎨','👩‍🚀','🧙‍♂️','🦸‍♀️','🧑‍🔬','🧑‍🎤','🐱','🦊','🐸','🐼'];
     const AVATAR_SET = new Set(AVATARS);
+    // Screen readers announced these as a bare "button". Each option now carries
+    // a Persian name, so the picker is usable without sight.
+    const AVATAR_NAMES = {};
+    ['خندان','عینک آفتابی','هیجان‌زده','لبخند','جشن','فرشته','کابوی','کارمند',
+     'هنرمند','فضانورد','جادوگر','ابرقهرمان','دانشمند','خواننده',
+     'گربه','روباه','قورباغه','پاندا'].forEach((nm, i) => {
+        if (AVATARS[i]) AVATAR_NAMES[AVATARS[i]] = nm;
+    });
+    function avatarName(a) { return AVATAR_NAMES[a] || 'آواتار'; }
     const DEFAULT_AVATAR = AVATARS[0];
 
     const CATEGORIES = [
@@ -2670,7 +2697,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '4.1.0';
+    const APP_VERSION    = '4.2.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -2971,7 +2998,9 @@
             const isSel = sel.jy === jy && sel.jm === jm && sel.jd === d;
             const isToday = today.jy === jy && today.jm === jm && today.jd === d;
             cells += '<button type="button" class="dp-cell' + (isSel ? ' sel' : '') +
-                     (isToday ? ' today' : '') + '" data-act="pickDay" data-arg="' + d + '">' +
+                     (isToday ? ' today' : '') + '" data-act="pickDay" data-arg="' + d +
+                     '" aria-label="' + esc(toPersian(d) + ' ' + JMONTHS[jm - 1] + ' ' + toPersian(jy)) +
+                     '"' + (isSel ? ' aria-current="date"' : '') + '>' +
                      toPersian(d) + '</button>';
         }
 
@@ -3617,7 +3646,8 @@
         calendar: '<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/>',
         search:   '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
         plus:     '<path d="M12 5v14M5 12h14"/>',
-        camera:   '<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>'
+        camera:   '<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>',
+        suitcase: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>'
     };
     function emptyState(iconKey, title, desc) {
         return '<div class="empty-state"><span class="icon">' + svgIcon(ICONS[iconKey] || ICONS.receipt, 30) + '</span>' +
@@ -3900,15 +3930,16 @@
 
         wrapper.style.display = 'block';
         container.innerHTML = recent.map(trip =>
-            '<div class="recent-trip-item" data-act="openRecent" data-arg="' + esc(trip.code) + '">' +
-                '<div class="recent-trip-icon">*</div>' +
+            '<div class="recent-trip-item" role="button" tabindex="0" data-act="openRecent" data-arg="' +
+                esc(trip.code) + '" aria-label="گشودن سفر ' + esc(trip.name) + '">' +
+                '<div class="recent-trip-icon" aria-hidden="true">' + svgIcon(ICONS.suitcase, 22) + '</div>' +
                 '<div class="recent-trip-info">' +
                     '<div class="recent-trip-name">' + esc(trip.name) + '</div>' +
                     '<div class="recent-trip-meta">' + toPersian(trip.memberCount || 0) + ' نفر - ' +
                         esc(trip.date || 'بدون تاریخ') + '</div>' +
                 '</div>' +
                 '<button class="recent-trip-delete" data-act="askRemoveRecent" data-arg="' + esc(trip.code) +
-                    '" title="حذف سفر" aria-label="حذف سفر">x</button>' +
+                    '" title="حذف سفر" aria-label="حذف سفر ' + esc(trip.name) + '">&times;</button>' +
             '</div>'
         ).join('');
     }
@@ -4755,8 +4786,9 @@
         const selected = formAvatars[formKey] || DEFAULT_AVATAR;
         container.dataset.avatarGrid = formKey;
         container.innerHTML = AVATARS.map(a =>
-            '<div class="avatar-option' + (a === selected ? ' selected' : '') +
-            '" role="button" tabindex="0" data-avatar="' + esc(a) + '">' + esc(a) + '</div>'
+            '<button type="button" class="avatar-option' + (a === selected ? ' selected' : '') +
+            '" data-avatar="' + esc(a) + '" aria-pressed="' + (a === selected ? 'true' : 'false') +
+            '" aria-label="آواتار ' + esc(avatarName(a)) + '">' + esc(a) + '</button>'
         ).join('');
     }
     function selectAvatar(containerId, formKey, avatar) {
@@ -4766,7 +4798,9 @@
         const container = $(containerId);
         if (!container) return;
         container.querySelectorAll('.avatar-option').forEach(el => {
-            el.classList.toggle('selected', el.dataset.avatar === avatar);
+            const on = el.dataset.avatar === avatar;
+            el.classList.toggle('selected', on);
+            el.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
     }
 
@@ -4774,10 +4808,11 @@
         const container = $(containerId);
         if (!container) return;
         container.innerHTML = CATEGORIES.map(c =>
-            '<div class="category-option' + (c.id === selected ? ' selected' : '') +
-            '" role="button" tabindex="0" data-cat="' + esc(c.id) + '">' +
-            '<span class="icon">' + esc(c.icon) + '</span>' +
-            '<span class="label">' + esc(c.name) + '</span></div>'
+            '<button type="button" class="category-option' + (c.id === selected ? ' selected' : '') +
+            '" data-cat="' + esc(c.id) + '" aria-pressed="' + (c.id === selected ? 'true' : 'false') +
+            '" aria-label="دسته ' + esc(c.name) + '">' +
+            '<span class="icon" aria-hidden="true">' + esc(c.icon) + '</span>' +
+            '<span class="label">' + esc(c.name) + '</span></button>'
         ).join('');
     }
     function selectCategory(containerId, catId) {
@@ -4787,7 +4822,9 @@
         const container = $(containerId);
         if (!container) return;
         container.querySelectorAll('.category-option').forEach(el => {
-            el.classList.toggle('selected', el.dataset.cat === catId);   // matched by id, not by icon
+            const on = el.dataset.cat === catId;                        // matched by id, not by icon
+            el.classList.toggle('selected', on);
+            el.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
     }
 
@@ -4919,7 +4956,10 @@
         const cat = getCategoryInfo(exp.category);
         const payer = getMember(exp.payerId);
         const mine = currentUser ? (expenseShares(exp)[currentUser.id] || 0) : 0;
-        return '<div class="expense-item" role="button" tabindex="0" data-act="openExpense" data-arg="' + esc(exp.id) + '">' +
+        const a11y = exp.title + ' - ' + formatNumber(baseAmount(exp)) + ' ' + tripCurrency() +
+                     ' - ' + dayLabel(exp.spentAt || exp.createdAt);
+        return '<div class="expense-item" role="button" tabindex="0" aria-label="' + esc(a11y) +
+               '" data-act="openExpense" data-arg="' + esc(exp.id) + '">' +
                '<div class="expense-icon" style="background:' + cat.color + '22;color:' + cat.color + '">' +
                esc(cat.icon) + '</div>' +
                '<div class="expense-info"><div class="expense-title">' + esc(exp.title) + '</div>' +
@@ -4991,8 +5031,13 @@
             const bal = (ledger.get(m.id) || {}).balance || 0;
             const isActive = m.active !== false;
             const isMe = currentUser && currentUser.id === m.id;
+            // reuse the memoized ledger value above rather than recomputing
+            const mLabel = m.name + ' - ' + (bal >= 0 ? 'طلبکار' : 'بدهکار') + ' ' +
+                           formatNumber(Math.abs(bal)) + ' ' + getCurrency() +
+                           (isActive ? '' : ' - غیرفعال');
             return '<div class="member-item' + (isActive ? '' : ' inactive') +
-                   '" role="button" tabindex="0" data-act="openMember" data-arg="' + esc(m.id) + '">' +
+                   '" role="button" tabindex="0" aria-label="' + esc(mLabel) +
+                   '" data-act="openMember" data-arg="' + esc(m.id) + '">' +
                    '<div class="member-avatar">' + escAvatar(m.avatar) + '</div>' +
                    '<div class="member-info"><div class="member-name">' + esc(m.name) +
                    (m.id === currentTrip.adminId ? '<span class="admin-badge">(مدیر)</span>' : '') +
