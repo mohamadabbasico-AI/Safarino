@@ -2586,6 +2586,16 @@
         .modal { background: rgba(24,16,22,.58); }
         [data-theme="pastel"] .modal { background: rgba(96,48,74,.42); }
         [data-theme="day"]    .modal { background: rgba(30,41,59,.46); }
+
+        /* Colour should carry meaning. Tinting the count and average tiles put
+           four competing hues on one row and made none of them mean anything;
+           now only credit and debt are coloured, so the eye lands there. */
+        .stat-card.neutral {
+            background: var(--bg-secondary);
+            border-color: var(--card-border, var(--glass-border));
+        }
+        .stat-card.neutral .stat-value { color: var(--text-primary); }
+        .stat-card.neutral .stat-icon { color: var(--text-muted); background: var(--glass); }
     </style>
 </head>
 <body>
@@ -2703,12 +2713,12 @@
                     <div class="stat-value" id="totalExpenses">۰</div>
                     <div class="stat-label">کل هزینه‌ها</div>
                 </div>
-                <div class="stat-card info">
+                <div class="stat-card neutral">
                     <span class="stat-icon" data-icon="person"></span>
                     <div class="stat-value" id="perPersonAvg">۰</div>
                     <div class="stat-label">میانگین سهم هر نفر</div>
                 </div>
-                <div class="stat-card warning">
+                <div class="stat-card neutral">
                     <span class="stat-icon" data-icon="receipt"></span>
                     <div class="stat-value" id="expenseCount">۰</div>
                     <div class="stat-label">تعداد هزینه</div>
@@ -3407,7 +3417,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.4.0';
+    const APP_VERSION    = '7.5.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
