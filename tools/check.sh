@@ -27,3 +27,5 @@ if (/linearGradient id="avg/.test(src)) { console.error("FAIL: colliding avatar 
 console.log("OK: " + have.size + " functions, CSS balanced, no id collisions");
 '
 rm -f .check.js
+
+node tools/contrast.js || exit 1
