@@ -2260,12 +2260,10 @@
             --shadow:    0 4px 20px rgba(206,90,131,.10);
             --shadow-lg: 0 16px 44px rgba(206,90,131,.16);
         }
-        [data-theme="pastel"] body {
-            background:
+        [data-theme="pastel"] {
+            --field:
                 radial-gradient(1100px 520px at 88% -8%,  rgba(247,155,187,.20), transparent 62%),
-                radial-gradient(900px 460px at 6% 4%,     rgba(156,139,224,.16), transparent 58%),
-                var(--bg-primary);
-            background-attachment: fixed;
+                radial-gradient(900px 460px at 6% 4%,     rgba(156,139,224,.16), transparent 58%);
         }
         [data-theme="pastel"] .trip-header {
             background: linear-gradient(135deg, #F79BBB 0%, #E9779F 48%, #B98BE0 100%);
@@ -2434,62 +2432,65 @@
            Layered radial fields give depth without clutter.
            ========================================================== */
 
-        body {
-            background-attachment: fixed;
-            transition: background-color .35s var(--ease);
+        /* The gradient field lives on a fixed pseudo-element behind everything.
+           Painting it as a fixed background on <body> forced a full-page
+           repaint on every scroll, and combined with the backdrop-filter on
+           the bars it locked the compositor hard enough to stop frames. */
+        body { transition: background-color .35s var(--ease); }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: var(--field, transparent);
         }
 
         /* --- NIGHT: teal aurora over deep slate --- */
-        [data-theme="night"] body,
-        :root:not([data-theme]) body {
-            background:
+        [data-theme="night"], :root:not([data-theme]) {
+            --field:
                 radial-gradient(1200px 560px at 82% -10%, rgba(20,184,166,.20), transparent 60%),
-                radial-gradient(900px 480px at 8% 2%,   rgba(59,130,246,.14), transparent 58%),
-                var(--bg-primary);
+                radial-gradient(900px 480px at 8% 2%,   rgba(59,130,246,.14), transparent 58%);
         }
         [data-theme="night"] .trip-header {
             background: linear-gradient(135deg, #2DD4BF 0%, #0D9488 45%, #155E75 100%);
         }
 
         /* --- DAY: crisp paper, cool light --- */
-        [data-theme="day"] body {
-            background:
+        [data-theme="day"] {
+            --field:
                 radial-gradient(1000px 460px at 88% -6%, rgba(13,148,136,.10), transparent 60%),
-                radial-gradient(820px 420px at 4% 0%,   rgba(59,130,246,.08), transparent 56%),
-                var(--bg-primary);
+                radial-gradient(820px 420px at 4% 0%,   rgba(59,130,246,.08), transparent 56%);
         }
         [data-theme="day"] .trip-header {
             background: linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0E7490 100%);
         }
 
         /* --- SUNSET: dusk over warm stone --- */
-        [data-theme="sunset"] body {
-            background:
+        [data-theme="sunset"] {
+            --field:
                 radial-gradient(1200px 560px at 78% -8%, rgba(249,115,22,.22), transparent 62%),
-                radial-gradient(900px 460px at 6% 4%,    rgba(217,70,120,.16), transparent 58%),
-                var(--bg-primary);
+                radial-gradient(900px 460px at 6% 4%,    rgba(217,70,120,.16), transparent 58%);
         }
         [data-theme="sunset"] .trip-header {
             background: linear-gradient(135deg, #FDBA74 0%, #F97316 42%, #B4326E 100%);
         }
 
         /* --- OCEAN: deep water, light from above --- */
-        [data-theme="ocean"] body {
-            background:
+        [data-theme="ocean"] {
+            --field:
                 radial-gradient(1200px 600px at 50% -14%, rgba(56,189,248,.22), transparent 62%),
-                radial-gradient(900px 460px at 90% 30%,   rgba(29,78,216,.16), transparent 60%),
-                var(--bg-primary);
+                radial-gradient(900px 460px at 90% 30%,   rgba(29,78,216,.16), transparent 60%);
         }
         [data-theme="ocean"] .trip-header {
             background: linear-gradient(135deg, #7DD3FC 0%, #0EA5E9 44%, #1E40AF 100%);
         }
 
         /* --- FOREST: canopy light through green --- */
-        [data-theme="forest"] body {
-            background:
+        [data-theme="forest"] {
+            --field:
                 radial-gradient(1100px 520px at 20% -8%, rgba(74,222,128,.20), transparent 60%),
-                radial-gradient(900px 480px at 92% 8%,   rgba(16,185,129,.14), transparent 58%),
-                var(--bg-primary);
+                radial-gradient(900px 480px at 92% 8%,   rgba(16,185,129,.14), transparent 58%);
         }
         [data-theme="forest"] .trip-header {
             background: linear-gradient(135deg, #86EFAC 0%, #22C55E 44%, #14532D 100%);
@@ -3402,7 +3403,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.1.0';
+    const APP_VERSION    = '7.2.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
