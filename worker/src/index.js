@@ -34,7 +34,10 @@ function json(body, status, headers) {
 
 export default {
     async fetch(request, env) {
-        const allowed = (env.ALLOWED_ORIGINS || '*').split(',').map(s => s.trim());
+        // Default to the published app rather than '*': if the dashboard variable
+        // is ever cleared, the worker must fail closed, not open to every site.
+        const allowed = (env.ALLOWED_ORIGINS || 'https://mohamadabbasico-ai.github.io')
+            .split(',').map(s => s.trim()).filter(Boolean);
         const origin = request.headers.get('Origin') || '';
         const ch = cors(origin, allowed);
 

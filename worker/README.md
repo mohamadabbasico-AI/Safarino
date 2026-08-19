@@ -3,6 +3,11 @@
 A shared mailbox for trips, not a database. The app stays offline-first and
 authoritative on the device; this only stores one JSON blob per trip.
 
+## Live
+
+Deployed at `https://safarino-sync.m-abbasi0812.workers.dev`
+KV namespace `safarino-trips` (`f9c3444299f841cf9f19cc716c180b73`) bound as `TRIPS`.
+
 ## Deploy
 
 ```
