@@ -3,7 +3,7 @@
    always failed and there was never any offline support. This is a real
    same-origin worker with a cache-first strategy for the app shell. */
 
-const CACHE = 'safarino-v7.8.0';
+const CACHE = 'safarino-v8.0.0';
 
 const SHELL = [
   './',

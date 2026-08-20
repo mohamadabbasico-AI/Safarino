@@ -2649,6 +2649,176 @@
         body.is-viewer .viewer-note, body.is-readonly .viewer-note { display: flex; }
         body.is-readonly .nav-add,
         body.is-readonly [data-act="settle"] { display: none !important; }
+
+        /* ==========================================================
+           ======  v8 VISUAL RICHNESS  ==============================
+           The layout was honest but plain: uniform cards, flat fills,
+           nothing to look at. This adds depth, texture and a bento
+           rhythm - all of it painted once, never on scroll, because
+           the last attempt at atmosphere stalled the compositor.
+           ========================================================== */
+
+        /* --- Grain. A single tiled SVG, cheap, gives surfaces tooth --- */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            opacity: .035;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* --- Gradient hairline borders. A masked pseudo-element beats
+               a real border: it can hold a gradient and costs nothing. --- */
+        .card, .stat-card, .trip-header {
+            position: relative;
+            isolation: isolate;
+        }
+        .card::before, .stat-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(150deg,
+                        color-mix(in srgb, var(--primary) 42%, transparent),
+                        transparent 38%,
+                        transparent 62%,
+                        color-mix(in srgb, var(--primary) 18%, transparent));
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+            opacity: .7;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .card:hover::before { opacity: 1; }
+
+        /* --- Layered elevation instead of one flat drop shadow --- */
+        .card {
+            box-shadow:
+                0 1px 2px rgba(16,24,40,.05),
+                0 6px 14px -8px rgba(16,24,40,.14),
+                0 18px 40px -24px rgba(16,24,40,.24);
+        }
+        .stat-card {
+            box-shadow:
+                0 1px 2px rgba(16,24,40,.05),
+                0 8px 20px -14px rgba(16,24,40,.22);
+        }
+
+        /* ==========================================================
+           ======  BENTO: sizes carry meaning  ======================
+           Four identical tiles gave every number the same weight.
+           Balance is what people open the app for, so it gets the
+           big cell; the rest support it.
+           ========================================================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-auto-rows: minmax(96px, auto);
+            gap: var(--sp-3);
+        }
+        .stats-grid > #myBalanceCard {
+            grid-column: span 2;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            text-align: start;
+            padding: var(--sp-4) var(--sp-5);
+        }
+        #myBalanceCard .stat-icon {
+            width: 46px; height: 46px; margin: 0;
+            border-radius: 15px;
+        }
+        #myBalanceCard .stat-value { font-size: 27px; }
+        #myBalanceCard .bento-text { display: flex; flex-direction: column; gap: 2px; }
+
+        @media (min-width: 620px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .stats-grid > #myBalanceCard { grid-column: span 2; }
+        }
+
+        /* --- Category colour reaches the whole tile, not just the glyph --- */
+        .expense-item {
+            position: relative;
+            overflow: hidden;
+        }
+        .expense-item::after {
+            content: "";
+            position: absolute;
+            inset-inline-start: 0;
+            top: 0; bottom: 0;
+            width: 3px;
+            background: var(--row-accent, transparent);
+            opacity: .85;
+        }
+
+        /* --- Avatars sit in a ring so they read as people, not blobs --- */
+        .member-avatar, .balance-avatar, .spender-avatar {
+            display: inline-flex;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 3.5px color-mix(in srgb, var(--primary) 30%, transparent);
+        }
+
+        /* --- The header gets a soft inner glow and a deeper base --- */
+        .trip-header::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background:
+                radial-gradient(120% 90% at 88% -20%, rgba(255,255,255,.30), transparent 58%),
+                radial-gradient(90% 80% at 8% 118%, rgba(0,0,0,.22), transparent 62%);
+            pointer-events: none;
+        }
+        .trip-header { box-shadow: 0 18px 40px -22px var(--primary-glow), 0 2px 8px rgba(0,0,0,.10); }
+
+        /* --- Progress bar reads as a filled vessel --- */
+        .trip-progress {
+            height: 9px;
+            border-radius: var(--r-full);
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,.22);
+        }
+        .trip-progress span {
+            background: linear-gradient(90deg, rgba(255,255,255,.75), #fff);
+            border-radius: var(--r-full);
+        }
+
+        /* --- Balance bars get a soft glow at their tip --- */
+        .balance-bar { height: 7px; border-radius: var(--r-full); overflow: hidden; }
+        .balance-bar span { border-radius: var(--r-full); }
+        .balance-bar .pos { box-shadow: 0 0 10px -1px color-mix(in srgb, var(--success) 65%, transparent); }
+        .balance-bar .neg { box-shadow: 0 0 10px -1px color-mix(in srgb, var(--danger) 65%, transparent); }
+
+        /* --- Nav gains a lifted pill behind the active tab --- */
+        .nav-item { position: relative; z-index: 1; }
+        .nav-item.active::after {
+            content: "";
+            position: absolute;
+            inset: 2px 6px;
+            border-radius: var(--r-md);
+            background: color-mix(in srgb, var(--primary) 11%, transparent);
+            z-index: -1;
+        }
+        .nav-add {
+            box-shadow:
+                0 6px 18px -4px var(--primary-glow),
+                0 2px 5px rgba(0,0,0,.18),
+                inset 0 1px 0 rgba(255,255,255,.28);
+        }
+
+        /* --- Buttons get a top highlight so they feel moulded --- */
+        .btn-primary, .nav-add {
+            background-image: linear-gradient(180deg, rgba(255,255,255,.18), transparent 55%);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card::before, .stat-card::before { transition: none; }
+        }
     </style>
 </head>
 <body>
@@ -2779,8 +2949,10 @@
                 </div>
                 <div class="stat-card" id="myBalanceCard">
                     <span class="stat-icon" data-icon="scale"></span>
-                    <div class="stat-value" id="myBalance">۰</div>
-                    <div class="stat-label" id="myBalanceLabel">وضعیت من</div>
+                    <div class="bento-text">
+                        <div class="stat-value" id="myBalance">۰</div>
+                        <div class="stat-label" id="myBalanceLabel">وضعیت من</div>
+                    </div>
                 </div>
             </div>
 
@@ -3472,7 +3644,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.8.0';
+    const APP_VERSION    = '8.0.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -4714,6 +4886,32 @@
         return '<div class="empty-state"><span class="icon">' + icon(key, 30) + '</span>' +
                (title ? '<div class="title">' + esc(title) + '</div>' : '') +
                (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') + '</div>';
+    }
+
+    /* Count the headline figure up to its value. A number that arrives by
+     * counting reads as a quantity; one that is simply printed reads as a
+     * label. Skipped when the value has not changed, on the first paint of a
+     * small number, and entirely under prefers-reduced-motion. */
+    const _countState = {};
+    function countUpTo(id, value, unit) {
+        const el = $(id);
+        if (!el) return;
+        const unitHtml = ' <span style="font-size:16px;opacity:.8">' + esc(unit) + '</span>';
+        const paint = v => { el.innerHTML = ltrNum(formatNumber(v)) + unitHtml; };
+        const from = _countState[id] || 0;
+        _countState[id] = value;
+
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced || from === value || Math.abs(value - from) < 1000) { paint(value); return; }
+
+        const t0 = performance.now(), dur = 650;
+        const step = now => {
+            const k = Math.min(1, (now - t0) / dur);
+            const eased = 1 - Math.pow(1 - k, 3);
+            paint(Math.round(from + (value - from) * eased));
+            if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
     }
 
     // ========== SMALL DOM HELPERS ==========
@@ -5984,8 +6182,7 @@
 
         setText('tripNameDisplay', currentTrip.name);
         const grand = currentTrip.expenses.reduce((sum, e) => sum + baseAmount(e), 0);
-        setHTML('tripTotalDisplay', ltrNum(formatNumber(grand)) + ' <span style="font-size:16px;opacity:.8">' +
-                esc(tripCurrency()) + '</span>');
+        countUpTo('tripTotalDisplay', grand, tripCurrency());
         setText('memberCountDisplay', toPersian(active.length));
         setText('tripDateDisplay', currentTrip.date);
         setText('tripCodeSmall', currentTrip.code);
@@ -6094,7 +6291,7 @@
         const a11y = exp.title + ' - ' + formatNumber(baseAmount(exp)) + ' ' + tripCurrency() +
                      ' - ' + dayLabel(exp.spentAt || exp.createdAt);
         return '<div class="expense-item" role="button" tabindex="0" aria-label="' + esc(a11y) +
-               '" data-act="openExpense" data-arg="' + esc(exp.id) + '">' +
+               '" style="--row-accent:' + cat.color + '" data-act="openExpense" data-arg="' + esc(exp.id) + '">' +
                '<div class="expense-icon" style="background:' + cat.color + '1F;color:' + cat.color + '">' +
                icon(cat.icon, 21) + '</div>' +
                '<div class="expense-info"><div class="expense-title">' + esc(exp.title) + '</div>' +
