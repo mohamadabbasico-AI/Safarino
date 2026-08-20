@@ -2605,6 +2605,50 @@
         body.is-viewer .admin-only { display: none !important; }
         body.is-viewer .viewer-banner { display: flex; }
         .viewer-banner { display: none; }
+
+        /* ---------- ROLES ---------- */
+        .modal-role { padding: 0 var(--sp-5) var(--sp-3); }
+        .role-row { display: flex; gap: 8px; }
+        .role-opt {
+            flex: 1;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 10px 8px;
+            font-family: inherit; font-size: var(--fs-sm); font-weight: 700;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--r-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .role-opt.on {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--glass);
+        }
+        .role-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: var(--fs-sm); font-weight: 800;
+            padding: 7px 13px; border-radius: var(--r-full);
+            background: var(--warning-bg); color: var(--warning);
+        }
+        .role-hint { font-size: var(--fs-xs); color: var(--text-muted); align-self: center; }
+
+        /* A viewer should know they are a viewer before they try to tap. */
+        .viewer-note {
+            display: none;
+            align-items: center; gap: 8px;
+            font-size: var(--fs-sm); font-weight: 600;
+            color: var(--info);
+            background: var(--info-bg);
+            border: 1px solid color-mix(in srgb, var(--info) 26%, transparent);
+            border-radius: var(--r-md);
+            padding: 11px 14px;
+            margin-bottom: var(--sp-4);
+        }
+        body.is-viewer .viewer-note, body.is-readonly .viewer-note { display: flex; }
+        body.is-readonly .nav-add,
+        body.is-readonly [data-act="settle"] { display: none !important; }
     </style>
 </head>
 <body>
@@ -2714,6 +2758,7 @@
                 </div>
             </div>
 
+            <div class="viewer-note"><span id="viewerNoteIcon"></span><span>شما این سفر را فقط می‌بینید. برای ثبت یا ویرایش هزینه، مدیر سفر باید دسترسی بدهد.</span></div>
             <div id="integrityBanner"></div>
 
             <div class="stats-grid">
@@ -3114,6 +3159,7 @@
                 <button class="modal-close" data-act="close" data-arg="memberDetailModal" aria-label="بستن">×</button>
             </div>
             <div class="modal-body" id="memberDetailContent"></div>
+            <div class="modal-role admin-only" id="memberRoleBox"></div>
             <div class="modal-footer admin-only">
                 <div class="btn-group">
                     <button class="btn btn-outline" data-act="editMember"><i data-ic="edit"></i> ویرایش</button>
@@ -3426,7 +3472,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.7.0';
+    const APP_VERSION    = '7.8.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -4053,6 +4099,7 @@
                 name: str(m.name, 40, 'بدون نام'),
                 avatar: AVATAR_SET.has(m.avatar) ? m.avatar : DEFAULT_AVATAR,
                 active: m.active !== false,
+                role: (m.role === 'editor' || m.role === 'viewer') ? m.role : 'editor',
                 deviceId: (typeof m.deviceId === 'string' && ID_RE.test(m.deviceId)) ? m.deviceId : null,
                 joinedAt: Number.isFinite(m.joinedAt) ? m.joinedAt : Date.now()
             });
@@ -4621,6 +4668,42 @@
         if (isAdmin()) return true;
         showToast('فقط مدیر سفر می‌تواند این کار را انجام دهد.', 'error');
         return false;
+    }
+
+    /* Three roles. The trip creator is admin and cannot be demoted, since a
+     * trip with nobody able to grant rights is a trip nobody can fix.
+     * Anyone arriving by code or link starts as a viewer: they can read the
+     * numbers but not touch them, and the admin decides who may write.
+     *
+     * Worth being plain about the limit: this runs in the browser, so it stops
+     * accidents and casual overreach, not somebody who opens devtools. Real
+     * enforcement needs accounts and a server that checks them.
+     */
+    function myRole() {
+        if (!currentTrip) return 'viewer';
+        if (viewerMode || !currentUser) return 'viewer';
+        if (currentTrip.adminId === currentUser.id) return 'admin';
+        const m = getMember(currentUser.id);
+        return (m && m.role === 'viewer') ? 'viewer' : (m ? 'editor' : 'viewer');
+    }
+    function canEdit() { const r = myRole(); return r === 'admin' || r === 'editor'; }
+
+    function requireEdit() {
+        if (canEdit()) return true;
+        showToast('شما فقط بیننده این سفر هستید. برای ثبت هزینه از مدیر سفر اجازه بگیرید.', 'warning', 5000);
+        return false;
+    }
+
+    function setMemberRole(memberId, role) {
+        if (!requireAdmin()) return;
+        const m = getMember(memberId);
+        if (!m) return;
+        if (m.id === currentTrip.adminId) { showToast('نقش مدیر سفر تغییر نمی‌کند', 'error'); return; }
+        m.role = (role === 'viewer') ? 'viewer' : 'editor';
+        stamp(m);
+        touch(); saveToStorage(); renderAll();
+        showToast(m.name + (m.role === 'editor' ? ' حالا می‌تواند هزینه ثبت کند' : ' فقط می‌تواند ببیند'),
+                  'success', 4000);
     }
 
 
@@ -5223,6 +5306,22 @@
         const cur = esc(getCurrency());
         const isActive = member.active !== false;
 
+        const roleBox = $('memberRoleBox');
+        if (roleBox) {
+            const isTheAdmin = member.id === currentTrip.adminId;
+            const r = member.role === 'viewer' ? 'viewer' : 'editor';
+            roleBox.innerHTML = isTheAdmin
+                ? '<div class="role-row"><span class="role-badge admin">' + icon('crown', 14) +
+                  ' مدیر سفر</span><span class="role-hint">همه دسترسی‌ها را دارد</span></div>'
+                : '<div class="role-row">' +
+                    '<button class="role-opt' + (r === 'editor' ? ' on' : '') +
+                      '" data-act="setRole" data-arg="' + esc(member.id) + '|editor">' +
+                      icon('edit', 14) + ' می‌تواند ثبت کند</button>' +
+                    '<button class="role-opt' + (r === 'viewer' ? ' on' : '') +
+                      '" data-act="setRole" data-arg="' + esc(member.id) + '|viewer">' +
+                      icon('person', 14) + ' فقط بیننده</button>' +
+                  '</div>';
+        }
         const toggleBtn = $('toggleMemberBtn');
         if (toggleBtn) toggleBtn.textContent = isActive ? 'غیرفعال کردن' : 'فعال کردن';
 
@@ -5344,6 +5443,7 @@
     }
 
     function openExpenseModal(expenseId) {
+        if (!requireEdit()) return;
         if (!currentTrip) return;
         if (!currentUser) { showToast('اول مشخص کنید کدام عضو هستید', 'warning'); promptIdentity(); return; }
 
@@ -5774,6 +5874,7 @@
     // so balances actually move and the row disappears from the to-do list.
     function settleUp(fromId, toId, amount) {
         if (!currentTrip) return;
+        if (!requireEdit()) return;
         const from = getMember(fromId), to = getMember(toId);
         const amt = toInt(amount);
         if (!from || !to || amt <= 0) return;
@@ -5794,6 +5895,7 @@
 
     function deletePayment(paymentId) {
         if (!currentTrip) return;
+        if (!requireEdit()) return;
         const idx = (currentTrip.payments || []).findIndex(p => p.id === paymentId);
         if (idx < 0) return;
         askConfirm('حذف پرداخت', 'این پرداخت حذف شود؟ بدهی دوباره برمی‌گردد.', () => {
@@ -5904,6 +6006,9 @@
         if (card) card.className = 'stat-card ' + (!currentUser ? 'warning' : (myBalance >= 0 ? 'success' : 'danger'));
 
         renderTripProgress();
+        document.body.classList.toggle('is-readonly', !canEdit());
+        const vni = $('viewerNoteIcon');
+        if (vni && !vni.firstChild) vni.innerHTML = icon('info', 16);
         renderQuickBalance();
         renderRecentExpenses();
         renderExpensesList();
@@ -6508,6 +6613,7 @@
         leaveTrip:    () => leaveTrip(),
         share:        () => shareTripCode(),
         copyCode:     () => copyTripCode(),
+        setRole:      arg => { const [id, role] = String(arg).split('|'); setMemberRole(id, role); },
         enableSync:   () => enableSync(),
         disableSync:  () => disableSync(),
         copyLink:     () => copySyncLink(),
