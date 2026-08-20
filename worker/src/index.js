@@ -13,6 +13,7 @@
 
 const MAX_BODY = 512 * 1024;         // a trip with photos stripped is a few KB
 const ID_RE = /^[A-Za-z0-9_-]{16,64}$/;
+const CODE_RE = /^[A-Z0-9]{4,12}$/;
 
 function cors(origin, allowed) {
     const ok = allowed.includes(origin) ? origin : allowed[0];
@@ -47,6 +48,51 @@ export default {
         const parts = url.pathname.split('/').filter(Boolean);
 
         if (parts[0] === 'health') return json({ ok: true }, 200, ch);
+
+        /* Short trip code -> sync id.
+         *
+         * The 6-character code is the thing people can read out loud or type
+         * on a phone, but it only ever looked in local storage, so a trip made
+         * on a laptop was unreachable from a phone without shipping a JSON
+         * file around. This maps the code to the long sync id.
+         *
+         * The code is short enough to enumerate, so resolving one deliberately
+         * returns nothing but the sync id and the trip name. Reading the trip
+         * still needs the 22-character id, and joining still puts the newcomer
+         * through the identity step.
+         */
+        if (parts[0] === 'code' && parts[1]) {
+            const code = String(parts[1]).toUpperCase();
+            if (!CODE_RE.test(code)) return json({ error: 'bad_code' }, 400, ch);
+            const ckey = 'code:' + code;
+
+            if (request.method === 'GET') {
+                const rec = await env.TRIPS.get(ckey, { type: 'json' });
+                if (!rec || !rec.syncId) return json({ error: 'not_found' }, 404, ch);
+                return json({ syncId: rec.syncId, name: rec.name || '' }, 200, ch);
+            }
+            if (request.method === 'PUT') {
+                const raw = await request.text();
+                if (raw.length > 4096) return json({ error: 'too_large' }, 413, ch);
+                let body;
+                try { body = JSON.parse(raw); } catch (e) { return json({ error: 'bad_json' }, 400, ch); }
+                if (!body || !ID_RE.test(String(body.syncId || ''))) {
+                    return json({ error: 'bad_shape' }, 400, ch);
+                }
+                const existing = await env.TRIPS.get(ckey, { type: 'json' });
+                // First registration wins, so a stranger cannot repoint someone
+                // else's code at a trip they control.
+                if (existing && existing.syncId && existing.syncId !== body.syncId) {
+                    return json({ error: 'code_taken' }, 409, ch);
+                }
+                await env.TRIPS.put(ckey, JSON.stringify({
+                    syncId: body.syncId,
+                    name: String(body.name || '').slice(0, 80)
+                }), { expirationTtl: 60 * 60 * 24 * 90 });
+                return json({ ok: true }, 200, ch);
+            }
+            return json({ error: 'method_not_allowed' }, 405, ch);
+        }
 
         if (parts[0] !== 'trip' || !parts[1]) {
             return json({ error: 'not_found' }, 404, ch);

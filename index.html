@@ -2596,6 +2596,15 @@
         }
         .stat-card.neutral .stat-value { color: var(--text-primary); }
         .stat-card.neutral .stat-icon { color: var(--text-muted); background: var(--glass); }
+
+        /* Viewer mode: everything that writes is out of reach, and the state is
+           stated plainly rather than left for the user to discover by tapping. */
+        body.is-viewer .nav-add,
+        body.is-viewer [data-act="newExpense"],
+        body.is-viewer [data-act="settle"],
+        body.is-viewer .admin-only { display: none !important; }
+        body.is-viewer .viewer-banner { display: flex; }
+        .viewer-banner { display: none; }
     </style>
 </head>
 <body>
@@ -3417,7 +3426,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '7.6.0';
+    const APP_VERSION    = '7.7.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -4244,7 +4253,13 @@
 
     // ========== SYNC: TRANSPORT ==========
     const SYNC_URL = 'https://safarino-sync.m-abbasi0812.workers.dev';
+    let viewerMode = false;       // looking at a shared trip without joining it
     let syncState = 'off';        // off | idle | syncing | ok | error | offline
+    // Applying a pulled copy writes to storage, and every write schedules a
+    // sync. Without this guard the two fed each other: one trip reached
+    // revision 799 in twenty minutes, which would exhaust a day of free-tier
+    // writes in under an hour and never settle.
+    let applyingRemote = false;
     let syncTimer = null;
     let syncInFlight = false;
 
@@ -4313,7 +4328,8 @@
                 currentTrip = merged;
                 touch();
                 if (currentUser && !getMember(currentUser.id)) currentUser = null;
-                saveToStorage();
+                applyingRemote = true;          // this save must not re-arm a sync
+                try { saveToStorage(); } finally { applyingRemote = false; }
                 renderAll();
             }
 
@@ -4335,7 +4351,7 @@
 
     // Coalesce bursts of edits into one round trip.
     function scheduleSync(delay) {
-        if (!syncEnabled()) return;
+        if (!syncEnabled() || applyingRemote) return;
         clearTimeout(syncTimer);
         syncTimer = setTimeout(() => syncNow('auto'), delay == null ? 1200 : delay);
     }
@@ -4355,6 +4371,17 @@
         if (on) setText('shareLinkBox', shareLinkFor(currentTrip));
     }
 
+    // Publish code -> syncId so the short code works from any device, not
+    // only the one that happens to hold the trip in local storage.
+    function registerCode(trip) {
+        if (!trip || !trip.syncId) return Promise.resolve();
+        return fetch(SYNC_URL + '/code/' + encodeURIComponent(trip.code), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ syncId: trip.syncId, name: trip.name })
+        }).catch(() => {});
+    }
+
     function enableSync() {
         if (!currentTrip) return;
         if (!requireAdmin()) return;
@@ -4364,6 +4391,7 @@
         setSyncState('idle');
         refreshShareModal();
         showToast('همگام‌سازی روشن شد', 'success');
+        registerCode(currentTrip);
         syncNow('enable');
     }
 
@@ -4837,7 +4865,12 @@
         }).join('');
         list.innerHTML = rows +
             '<button class="pick-item" data-act="pickIdentity" data-arg="__new__">' +
-            '<span class="pk-avatar">+</span><span class="pk-name">من عضو جدیدی هستم</span></button>';
+            '<span class="pk-avatar">' + icon('plus', 22) + '</span>' +
+            '<span class="pk-name">من عضو جدیدی هستم</span></button>' +
+            '<button class="pick-item" data-act="pickIdentity" data-arg="__viewer__">' +
+            '<span class="pk-avatar">' + icon('person', 22) + '</span>' +
+            '<span class="pk-name">فقط تماشا می‌کنم</span>' +
+            '<span class="pk-tag">بدون عضو شدن</span></button>';
         showModal('identityModal');
         if (issues && issues.length) setTimeout(() => reportIssues(issues), 400);
     }
@@ -4848,6 +4881,20 @@
             showModal('addMemberModal');
             return;
         }
+        // Look without joining: someone forwarded the link and wants to see the
+        // numbers, not become a member and start absorbing a share of costs.
+        if (memberId === '__viewer__') {
+            currentUser = null;
+            viewerMode = true;
+            document.body.classList.add('is-viewer');
+            hideModal('identityModal');
+            updateAdminUI();
+            renderAll();
+            showToast('حالت تماشا - می‌توانید ببینید ولی تغییری ثبت نمی‌شود', 'info', 5000);
+            return;
+        }
+        viewerMode = false;
+        document.body.classList.remove('is-viewer');
         const m = getMember(memberId);
         if (!m) return;
         m.deviceId = getDeviceId();
@@ -4995,7 +5042,19 @@
 
         const raw = readJSON(K_TRIP + code, null);
         if (!raw) {
-            showToast('سفری با این کد روی این دستگاه نیست. برای انتقال از فایل JSON استفاده کنید.', 'error', 6000);
+            // Not on this device - ask the server whether the code is published.
+            showToast('در حال جستجوی سفر...', 'info', 2000);
+            fetch(SYNC_URL + '/code/' + encodeURIComponent(code), { cache: 'no-store' })
+                .then(r => r.ok ? r.json() : null)
+                .then(found => {
+                    if (!found || !found.syncId) {
+                        showToast('سفری با این کد پیدا نشد. اگر سازنده سفر همگام‌سازی را روشن نکرده، باید لینک یا فایل بفرستد.', 'error', 7000);
+                        return;
+                    }
+                    hideModal('joinTripModal');
+                    joinFromLink(found.syncId);
+                })
+                .catch(() => showToast('اتصال به سرور ممکن نشد', 'error'));
             return;
         }
         const result = sanitizeTrip(raw);
