@@ -2824,6 +2824,59 @@
         @media (prefers-reduced-motion: reduce) {
             .card::before, .stat-card::before { transition: none; }
         }
+
+        /* ===== BRAND MARK ===== */
+        .brand-mark {
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-text-fill-color: initial;
+            background: none;
+        }
+        .bm { display: block; overflow: visible; }
+        .bm-track {
+            fill: none;
+            stroke: color-mix(in srgb, var(--primary) 22%, transparent);
+            stroke-width: 2.2;
+        }
+        .bm-ring {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 2.6;
+            stroke-linecap: round;
+            transition: stroke-dasharray .6s var(--ease);
+            filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary) 55%, transparent));
+        }
+        .bm-art { color: var(--primary); transform-origin: 16px 16px; }
+        .bm-cut { fill: var(--bg-secondary); }
+
+        /* Motion is slow and small on purpose: a logo that twitches pulls the
+           eye away from the numbers, which is the opposite of what this app
+           is for. Each theme gets one gesture, once every few seconds. */
+        @keyframes bmTwinkle { 0%,100% { opacity:.25 } 50% { opacity:1 } }
+        @keyframes bmBeat    { 0%,88%,100% { transform:scale(1) } 92% { transform:scale(1.13) } 96% { transform:scale(1.05) } }
+        @keyframes bmSpin    { to { transform: rotate(360deg) } }
+        @keyframes bmRise    { 0%,100% { transform: translateY(1.5px) } 50% { transform: translateY(-1.5px) } }
+        @keyframes bmWave    { 0%,100% { transform: translateX(-2px) } 50% { transform: translateX(2px) } }
+        @keyframes bmSway    { 0%,100% { transform: rotate(-2.5deg) } 50% { transform: rotate(2.5deg) } }
+
+        .bm-twinkle { animation: bmTwinkle 3.2s ease-in-out infinite; }
+        .bm-twinkle.bm-d2 { animation-delay: 1.4s; }
+        .bm-beat  { animation: bmBeat 4.5s ease-in-out infinite; transform-origin: 16px 16px; }
+        .bm-spin  { animation: bmSpin 22s linear infinite; transform-origin: 16px 16px; }
+        .bm-rise  { animation: bmRise 5s ease-in-out infinite; }
+        .bm-wave  { animation: bmWave 6s ease-in-out infinite; }
+        .bm-sway  { animation: bmSway 6.5s ease-in-out infinite; transform-origin: 16px 29px; }
+
+        .brand:active .bm-art { transform: scale(.9); }
+        .brand { cursor: default; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bm-twinkle, .bm-beat, .bm-spin, .bm-rise, .bm-wave, .bm-sway { animation: none !important; }
+            .bm-ring { transition: none; }
+        }
     </style>
 </head>
 <body>
@@ -3422,6 +3475,18 @@
                         <button class="btn btn-primary" data-act="copyLink"><i data-ic="list"></i> کپی لینک</button>
                         <button class="btn btn-secondary" data-act="shareLink"><i data-ic="share"></i> ارسال</button>
                     </div>
+                    <div class="owner-block" id="ownerBlock" style="display:none;">
+                        <div class="divider">مدیریت از دستگاه دیگر</div>
+                        <div class="banner warn" style="text-align:right;">
+                            <span class="bn-icon"><i data-ic="warn"></i></span>
+                            <span>این لینک <strong>دسترسی مدیریت</strong> می‌دهد. فقط برای خودتان بفرستید،
+                            نه در گروه سفر. با بازکردنش روی گوشی، همان‌جا هم مدیر می‌شوید.</span>
+                        </div>
+                        <div class="share-link" id="ownerLinkBox"></div>
+                        <button class="btn btn-warning btn-sm" style="width:100%; margin-top:10px;" data-act="copyOwnerLink">
+                            <i data-ic="link"></i> کپی لینک مدیریت
+                        </button>
+                    </div>
                     <button class="btn btn-outline btn-sm" style="width:100%; margin-top:10px;" data-act="syncNow"><i data-ic="refresh"></i> همگام‌سازی دستی</button>
                     <button class="btn btn-ghost btn-sm" style="width:100%; margin-top:6px;" data-act="disableSync">قطع همگام‌سازی این سفر</button>
                 </div>
@@ -3502,6 +3567,70 @@
         (root || document).querySelectorAll('[data-icon]:empty').forEach(el => {
             el.innerHTML = icon(el.dataset.icon, 20);
         });
+    }
+
+
+    // ========== BRAND MARK ==========
+    /**
+     * The mark beside the wordmark used to be an emoji; stripping it left an
+     * empty box. Rather than drop another glyph in, it earns its place: the
+     * ring around it tracks how much of the trip is settled.
+     *
+     * That is the goal-gradient effect - people push harder toward a goal the
+     * closer it looks - so the one number worth nagging about sits in the
+     * chrome, always visible, without a banner or a badge shouting about it.
+     * Each theme gets its own motif so the app feels like itself in every skin.
+     */
+    const BRAND_ART = {
+        night:  '<circle cx="17" cy="14" r="7.5" fill="currentColor"/>' +
+                '<circle cx="21" cy="11" r="7" class="bm-cut"/>' +
+                '<circle cx="9" cy="8" r="1.3" fill="currentColor" class="bm-twinkle"/>' +
+                '<circle cx="24" cy="21" r="1" fill="currentColor" class="bm-twinkle bm-d2"/>',
+        pastel: '<path d="M16 24s-7.5-4.8-7.5-10a4.4 4.4 0 0 1 7.5-3 4.4 4.4 0 0 1 7.5 3c0 5.2-7.5 10-7.5 10z" ' +
+                'fill="currentColor" class="bm-beat"/>',
+        day:    '<circle cx="16" cy="16" r="6" fill="currentColor"/>' +
+                '<g class="bm-spin" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">' +
+                '<path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.8 6.8l2.1 2.1M23.1 23.1l2.1 2.1M25.2 6.8l-2.1 2.1M8.9 23.1l-2.1 2.1"/></g>',
+        sunset: '<path d="M4 21h24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>' +
+                '<circle cx="16" cy="17" r="7" fill="currentColor" class="bm-rise"/>' +
+                '<path d="M4 25h9M19 25h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>',
+        ocean:  '<g class="bm-wave" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none">' +
+                '<path d="M4 13c3-3 6-3 9 0s6 3 9 0 6-3 6 0"/>' +
+                '<path d="M4 19c3-3 6-3 9 0s6 3 9 0 6-3 6 0" opacity=".65"/>' +
+                '<path d="M4 25c3-3 6-3 9 0s6 3 9 0 6-3 6 0" opacity=".35"/></g>',
+        forest: '<path d="M16 3l7 10h-4l5 8h-5l4 7H9l4-7H8l5-8H9z" fill="currentColor" class="bm-sway"/>' +
+                '<path d="M16 24v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'
+    };
+
+    function renderBrandMark() {
+        const host = document.querySelector('.brand-mark');
+        if (!host) return;
+        const theme = document.documentElement.getAttribute('data-theme') || 'night';
+        const art = BRAND_ART[theme] || BRAND_ART.night;
+
+        // ring = share of the trip already settled
+        let pct = 0;
+        if (currentTrip && currentTrip.expenses && currentTrip.expenses.length) {
+            const owed = currentTrip.members.reduce((s, m) => s + Math.max(0, -balanceOf(m.id)), 0);
+            const moved = (currentTrip.payments || []).reduce((s, p) => s + (p.amount || 0), 0);
+            const total = owed + moved;
+            pct = total > 0 ? Math.max(0, Math.min(1, moved / total)) : 1;
+        }
+        const R = 14.5, C = 2 * Math.PI * R;
+        const shown = pct > 0 ? (C * pct) : 0;
+
+        host.innerHTML =
+            '<svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" class="bm">' +
+              '<circle cx="16" cy="16" r="' + R + '" class="bm-track"/>' +
+              (shown > 0
+                ? '<circle cx="16" cy="16" r="' + R + '" class="bm-ring" ' +
+                  'stroke-dasharray="' + shown.toFixed(2) + ' ' + (C - shown).toFixed(2) + '" ' +
+                  'transform="rotate(-90 16 16)"/>'
+                : '') +
+              '<g class="bm-art">' + art + '</g>' +
+            '</svg>';
+        host.setAttribute('title',
+            currentTrip ? 'تسویه‌شده: ' + toPersian(Math.round(pct * 100)) + '٪' : 'سفرینو');
     }
 
     // ========== ICON SYSTEM ==========
@@ -3649,7 +3778,7 @@
     ];
     const CATEGORY_IDS = new Set(CATEGORIES.map(c => c.id));
 
-    const APP_VERSION    = '8.0.1';
+    const APP_VERSION    = '8.1.0';
     const SCHEMA_VERSION = 3;
 
     // FIX #13: an explicit ceiling keeps every amount inside the safe integer
@@ -4412,6 +4541,8 @@
         return {
             trip: {
                 code: code, name: name, date: date, currency: currency, adminId: adminId,
+                ownerHash: (typeof raw.ownerHash === 'string' && /^[0-9a-f]{64}$/.test(raw.ownerHash))
+                           ? raw.ownerHash : null,
                 members: members, expenses: expenses, payments: payments,
                 rates: (raw.rates && typeof raw.rates === 'object') ? raw.rates : {},
                 createdAt: Number.isFinite(raw.createdAt) ? raw.createdAt : Date.now(),
@@ -4466,6 +4597,7 @@
 
         return Object.assign({}, local, {
             name: newer.name, date: newer.date, currency: newer.currency, adminId: newer.adminId,
+            ownerHash: local.ownerHash || remote.ownerHash || null,
             rates: Object.assign({}, remote.rates || {}, local.rates || {}),
             members: mb.list,
             expenses: ex.list.sort((a, b) => (a.spentAt || a.createdAt || 0) - (b.spentAt || b.createdAt || 0)),
@@ -4593,6 +4725,14 @@
         if (off) off.style.display = on ? 'none' : 'block';
         if (onB) onB.style.display = on ? 'block' : 'none';
         if (on) setText('shareLinkBox', shareLinkFor(currentTrip));
+        // The owner link only makes sense to the person who already owns the
+        // trip on this device; showing it to anyone else would hand over control.
+        const ob = $('ownerBlock');
+        const link = (on && isAdmin()) ? ownerLinkFor(currentTrip) : null;
+        if (ob) {
+            ob.style.display = link ? 'block' : 'none';
+            if (link) { setText('ownerLinkBox', link); paintIcons(ob); }
+        }
     }
 
     // Publish code -> syncId so the short code works from any device, not
@@ -4837,8 +4977,103 @@
         return Math.round(sum / active.length);
     }
 
+
+    // ========== TRIP OWNERSHIP ==========
+    /**
+     * Admin used to mean nothing more than "you picked the creator's row in the
+     * identity list", so it could not follow the creator to a second device
+     * without also being claimable by anyone holding the join link.
+     *
+     * A trip now carries a hash of an owner key. The raw key never travels with
+     * the trip: it lives on the creator's device and inside the owner link they
+     * can send to themselves. Presenting it unlocks admin on that device.
+     *
+     * Trips made before this keep working: with no hash recorded, ownership
+     * falls back to matching the creator's member id, exactly as before.
+     */
+    const K_OWNER = 'safarino_owner_';        // + trip code -> raw key
+
+    function newOwnerKey() {
+        const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        const b = new Uint8Array(22);
+        crypto.getRandomValues(b);
+        let out = '';
+        for (let i = 0; i < b.length; i++) out += alpha[b[i] % alpha.length];
+        return out;
+    }
+
+    async function hashKey(raw) {
+        const data = new TextEncoder().encode('safarino-owner:' + raw);
+        const buf = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function storedOwnerKey(code) {
+        try { return localStorage.getItem(K_OWNER + code) || null; } catch (e) { return null; }
+    }
+    function rememberOwnerKey(code, raw) {
+        try { localStorage.setItem(K_OWNER + code, raw); } catch (e) {}
+    }
+
+    // Has this device proved ownership of the current trip?
+    let ownerUnlocked = false;
+
+    async function verifyOwner(trip, raw) {
+        if (!trip || !trip.ownerHash || !raw) return false;
+        try { return (await hashKey(raw)) === trip.ownerHash; } catch (e) { return false; }
+    }
+
+    async function refreshOwnership() {
+        if (!currentTrip) { ownerUnlocked = false; return; }
+        if (!currentTrip.ownerHash) {          // legacy trip: old rule still applies
+            ownerUnlocked = false;
+            updateAdminUI();
+            return;
+        }
+        const raw = storedOwnerKey(currentTrip.code);
+        ownerUnlocked = await verifyOwner(currentTrip, raw);
+        updateAdminUI();
+        renderAll();
+    }
+
+    function ownerLinkFor(trip) {
+        const raw = storedOwnerKey(trip.code);
+        if (!trip.syncId || !raw) return null;
+        return location.origin + location.pathname + '#j=' + trip.syncId + '&k=' + raw;
+    }
+
+    // Someone opened an owner link: check the key, then take the creator's seat.
+    async function claimOwnership(rawKey) {
+        if (!currentTrip) return false;
+        const ok = await verifyOwner(currentTrip, rawKey);
+        if (!ok) {
+            showToast('کلید مدیریت معتبر نیست', 'error', 5000);
+            return false;
+        }
+        rememberOwnerKey(currentTrip.code, rawKey);
+        ownerUnlocked = true;
+
+        // sit in the creator's member row so balances stay attributed correctly
+        const creator = currentTrip.members.find(m => m.id === currentTrip.adminId);
+        if (creator) {
+            creator.deviceId = getDeviceId();
+            stamp(creator);
+            currentUser = creator;
+            touch();
+            saveToStorage();
+        }
+        hideAllModals();
+        updateAdminUI();
+        renderAll();
+        showToast('دسترسی مدیریت روی این دستگاه فعال شد', 'success', 4000);
+        return true;
+    }
+
     function isAdmin() {
-        return !!(currentTrip && currentUser && currentTrip.adminId === currentUser.id);
+        if (!currentTrip || !currentUser) return false;
+        // Trips created before owner keys existed keep the original rule.
+        if (!currentTrip.ownerHash) return currentTrip.adminId === currentUser.id;
+        return ownerUnlocked && currentTrip.adminId === currentUser.id;
     }
     // FIX #20: CSS hiding is cosmetic; destructive actions check permission here.
     function requireAdmin() {
@@ -5044,6 +5279,7 @@
         if (panel) panel.classList.remove('show');
         const meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.content = THEME_COLORS[theme];
+        renderBrandMark();
     }
     function toggleSettings() {
         const p = $('settingsPanel');
@@ -5125,6 +5361,7 @@
         touch();
         setSyncState(trip.syncId ? 'idle' : 'off');
         if (trip.syncId) scheduleSync(600);
+        refreshOwnership();
         const known = resolveIdentity(trip);
         if (known) {
             currentUser = known;
@@ -5291,6 +5528,7 @@
             date: date.slice(0, 40) || 'بدون تاریخ',
             currency: currency,
             adminId: adminId,
+            ownerHash: null,
             members: [admin],
             expenses: [],
             payments: [],
@@ -5301,6 +5539,22 @@
         };
         currentUser = admin;
         touch();
+
+        // Mint this trip's owner key. The raw key stays on this device and in
+        // the owner link; only its hash travels with the trip, so holding the
+        // join link is not enough to seize control of the trip.
+        const rawOwner = newOwnerKey();
+        const thisCode = currentTrip.code;
+        rememberOwnerKey(thisCode, rawOwner);
+        ownerUnlocked = true;
+        hashKey(rawOwner).then(h => {
+            if (currentTrip && currentTrip.code === thisCode) {
+                currentTrip.ownerHash = h;
+                touch();
+                saveToStorage();
+                updateAdminUI();
+            }
+        });
 
         if (!saveToStorage()) return;
         hideModal('createTripModal');
@@ -6218,6 +6472,7 @@
         renderSettlements();
         renderPayments();
         renderReportStats();
+        renderBrandMark();
         if ($('reportsScreen').classList.contains('active')) renderChart();
         updateAdminUI();
     }
@@ -6821,6 +7076,13 @@
         copyLink:     () => copySyncLink(),
         shareLink:    () => shareSyncLink(),
         syncNow:      () => syncNow('manual'),
+        copyOwnerLink: () => {
+            const link = ownerLinkFor(currentTrip);
+            if (!link) { showToast('لینک مدیریت در دسترس نیست', 'error'); return; }
+            const done = () => showToast('لینک مدیریت کپی شد - فقط برای خودتان بفرستید', 'success', 5000);
+            if (navigator.clipboard) navigator.clipboard.writeText(link).then(done).catch(() => fallbackCopy(link, done));
+            else fallbackCopy(link, done);
+        },
         export:       () => exportTrip(),
         importFile:   () => importTripFromFile(),
         print:        () => printReport(),
@@ -7013,12 +7275,16 @@
         renderAvatarGrid('editMemberAvatarGrid', 'editMember');
         renderFilterChips();
         paintIcons(document);
+        renderBrandMark();
 
         // A shared link wins over reopening whatever was last used on this device.
         const hash = (location.hash || '').match(/[#&]j=([A-Za-z0-9_-]{16,64})/);
+        const keyHash = (location.hash || '').match(/[#&]k=([A-Za-z0-9_-]{16,64})/);
+        const ownerKey = keyHash ? keyHash[1] : null;
         if (hash) {
             history.replaceState(null, '', location.pathname + location.search);
             joinFromLink(hash[1]).then(ok => {
+                if (ok && ownerKey) claimOwnership(ownerKey);
                 if (!ok) loadRecentTrips();
                 hideLoading();
             });

@@ -1,15 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="سفرینو">
+  <title>سفرینو</title>
+  <!--
+    The mark has to do two jobs at 48px on a crowded home screen: say "travel"
+    and say "shared money", and be findable by silhouette alone.
+
+    A compass rose reads as journey. Cutting it into unequal wedges makes it
+    read as a split at the same time - and unequal on purpose, because shares
+    in a real trip never come out even. The needle doubles as the path.
+
+    Warm coral over deep teal: warm hues carry approach and generosity, which
+    is the feeling to attach to settling up with friends, while the deep base
+    keeps it legible against light and dark wallpapers alike.
+  -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="sfBg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#14B8A6"/>
-      <stop offset="1" stop-color="#0F766E"/>
+      <stop offset=".52" stop-color="#0D9488"/>
+      <stop offset="1" stop-color="#0B5E6B"/>
     </linearGradient>
+    <linearGradient id="sfWarm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD9A8"/>
+      <stop offset="1" stop-color="#F97362"/>
+    </linearGradient>
+    <radialGradient id="sfGlow" cx=".32" cy=".24" r=".8">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="352" cy="150" r="46" fill="#FDBA74"/>
-  <path d="M96 300c40-34 80-34 120 0s80 34 120 0 80-34 120 0" fill="none"
-        stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" opacity="0.95"/>
-  <path d="M96 372c40-34 80-34 120 0s80 34 120 0 80-34 120 0" fill="none"
-        stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" opacity="0.6"/>
-  <path d="M186 236V118m0 0c-34 0-62 20-62 44h124c0-24-28-44-62-44z" fill="#FFFFFF"/>
+
+  <rect width="512" height="512" rx="114" fill="url(#sfBg)"/>
+  <rect width="512" height="512" rx="114" fill="url(#sfGlow)"/>
+
+  <!-- the dial: four unequal wedges, so it reads as a division as well as a compass -->
+  <g transform="translate(256 256)">
+    <circle r="146" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="14"/>
+
+    <path d="M0 0 L0 -146 A146 146 0 0 1 126 -73 Z" fill="#ffffff" fill-opacity=".95"/>
+    <path d="M0 0 L126 -73 A146 146 0 0 1 73 126 Z" fill="#ffffff" fill-opacity=".62"/>
+    <path d="M0 0 L73 126 A146 146 0 0 1 -126 73 Z" fill="#ffffff" fill-opacity=".38"/>
+    <path d="M0 0 L-126 73 A146 146 0 0 1 0 -146 Z" fill="#ffffff" fill-opacity=".78"/>
+
+    <!-- the needle: a route from one point to another -->
+    <path d="M-96 96 L96 -96" stroke="url(#sfWarm)" stroke-width="30" stroke-linecap="round"/>
+    <circle cx="-96" cy="96" r="27" fill="#0B5E6B"/>
+    <circle cx="-96" cy="96" r="15" fill="url(#sfWarm)"/>
+    <circle cx="96" cy="-96" r="27" fill="#0B5E6B"/>
+    <circle cx="96" cy="-96" r="15" fill="#FFFFFF"/>
+
+    <circle r="26" fill="#0B5E6B"/>
+    <circle r="13" fill="url(#sfWarm)"/>
+  </g>
 </svg>
