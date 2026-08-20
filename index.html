@@ -2737,8 +2737,11 @@
         #myBalanceCard .bento-text { display: flex; flex-direction: column; gap: 2px; }
 
         @media (min-width: 620px) {
-            .stats-grid { grid-template-columns: repeat(4, 1fr); }
-            .stats-grid > #myBalanceCard { grid-column: span 2; }
+            /* Five tracks, the wide tile taking two of them and leading the row.
+               At four tracks the two-wide tile wrapped and left a pair of dead
+               cells behind it. */
+            .stats-grid { grid-template-columns: repeat(5, 1fr); }
+            .stats-grid > #myBalanceCard { grid-column: span 2; order: -1; }
         }
 
         /* --- Category colour reaches the whole tile, not just the glyph --- */
@@ -2813,7 +2816,9 @@
 
         /* --- Buttons get a top highlight so they feel moulded --- */
         .btn-primary, .nav-add {
-            background-image: linear-gradient(180deg, rgba(255,255,255,.18), transparent 55%);
+            background-image:
+                linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0) 55%),
+                linear-gradient(135deg, var(--primary-light), var(--primary));
         }
 
         @media (prefers-reduced-motion: reduce) {
